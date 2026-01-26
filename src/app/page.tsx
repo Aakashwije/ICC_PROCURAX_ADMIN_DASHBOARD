@@ -1,14 +1,25 @@
 import Link from 'next/link';
+import Image from "next/image";
+
+
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-linear-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
       <div className="text-center max-w-2xl">
         <div className="mb-8">
-          <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center mx-auto mb-6">
-            <span className="text-4xl font-bold text-white">CM</span>
-          </div>
-          <h1 className="text-5xl font-bold text-white mb-4">Construction Management</h1>
+          <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center mx-auto mb-6 overflow-hidden">
+  <Image
+    src="/icc_logo.jpg"
+    alt="ICC Logo"
+    width={90}
+    height={90}
+    className="object-contain"
+    priority
+  />
+</div>
+
+          <h1 className="text-5xl font-bold text-white mb-4">ICC PROCURAX ADMIN DASHBOARD</h1>
           <p className="text-xl text-slate-300 mb-8">
             Admin Dashboard for Managing Project Managers and Mobile App Access
           </p>
