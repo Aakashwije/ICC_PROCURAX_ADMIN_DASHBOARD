@@ -17,7 +17,7 @@ import {
 
 export default function Sidebar() {
   const [isOpen, setIsOpen] = useState(true);
-  const pathname = usePathname(); // ✅ current route
+  const pathname = usePathname(); 
 
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -50,9 +50,12 @@ export default function Sidebar() {
         {menuItems.map((item) => {
           const Icon = item.icon;
 
-          // ✅ check if current page is active
+        
+          // Treat the top-level dashboard route as an exact match only.
+          // For other menu items allow prefix matching so nested routes remain active.
           const isActive =
-            pathname === item.href || pathname.startsWith(item.href + "/");
+            pathname === item.href ||
+            (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
 
           return (
             <Link
