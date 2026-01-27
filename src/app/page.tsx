@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Image from "next/image";
+import { LayoutDashboard } from "lucide-react";
 
 
 
@@ -19,7 +20,10 @@ export default function Home() {
   />
 </div>
 
-          <h1 className="text-5xl font-bold text-white mb-4">ICC PROCURAX ADMIN DASHBOARD</h1>
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <LayoutDashboard className="text-blue-400" size={32} />
+            <h1 className="text-5xl font-bold text-white">ICC PROCURAX ADMIN DASHBOARD</h1>
+          </div>
           <p className="text-xl text-slate-300 mb-8">
             Admin Dashboard for Managing Project Managers and Mobile App Access
           </p>

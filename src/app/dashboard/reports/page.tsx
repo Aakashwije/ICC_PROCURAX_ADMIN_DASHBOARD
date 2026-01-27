@@ -2,6 +2,7 @@
 
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
+import { BarChart3, Download } from 'lucide-react';
 
 export default function ReportsPage() {
   const reports = [
@@ -18,7 +19,10 @@ export default function ReportsPage() {
         <Header />
         <main className="p-8 bg-slate-50 min-h-screen">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Reports</h1>
+            <div className="flex items-center gap-3">
+              <BarChart3 size={24} className="text-blue-600" />
+              <h1 className="text-3xl font-bold text-slate-900">Reports</h1>
+            </div>
             <p className="text-slate-600 mt-2">Generate and download system reports</p>
           </div>
 
@@ -48,7 +52,10 @@ export default function ReportsPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-3 py-1 rounded">{report.type}</span>
-                    <button className="text-blue-600 hover:text-blue-800 font-medium">Download</button>
+                    <button className="text-blue-600 hover:text-blue-800 font-medium inline-flex items-center gap-2">
+                      <Download size={16} />
+                      Download
+                    </button>
                   </div>
                 </div>
               ))}

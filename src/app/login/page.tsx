@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
+import { LogIn } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -45,7 +46,10 @@ export default function LoginPage() {
               />
             </div>
 
-            <h1 className="text-3xl font-bold text-slate-900">Admin Login</h1>
+            <div className="flex items-center justify-center gap-2">
+              <LogIn size={20} className="text-blue-600" />
+              <h1 className="text-3xl font-bold text-slate-900">Admin Login</h1>
+            </div>
             <p className="text-slate-600 mt-2">
               ICC ProcuraX Admin Dashboard
             </p>
@@ -113,7 +117,7 @@ export default function LoginPage() {
 
         {/* Background decorations */}
         <div className="mt-8 text-center text-slate-300 text-sm">
-          <p>© 2026 Construction Management System. All rights reserved.</p>
+          <p>© ICC ProcuraX 2026</p>
         </div>
       </div>
     </div>

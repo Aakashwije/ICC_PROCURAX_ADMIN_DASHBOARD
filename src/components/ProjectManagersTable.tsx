@@ -99,7 +99,7 @@ export default function ProjectManagersTable() {
               <td className="px-6 py-4">
                 <select
                   value={manager.status}
-                  onChange={(e) => updateStatus(manager.id, e.target.value as any)}
+                  onChange={(e) => updateStatus(manager.id, e.target.value as ProjectManager['status'])}
                   className={`px-3 py-1 rounded-full text-xs font-semibold cursor-pointer ${getStatusColor(
                     manager.status
                   )}`}

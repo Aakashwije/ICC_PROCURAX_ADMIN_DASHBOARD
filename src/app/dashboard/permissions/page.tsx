@@ -2,6 +2,7 @@
 
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
+import { Check, KeyRound } from 'lucide-react';
 
 export default function PermissionsPage() {
   const rolePermissions = [
@@ -44,7 +45,10 @@ export default function PermissionsPage() {
         <Header />
         <main className="p-8 bg-slate-50 min-h-screen">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Permissions</h1>
+            <div className="flex items-center gap-3">
+              <KeyRound size={24} className="text-blue-600" />
+              <h1 className="text-3xl font-bold text-slate-900">Permissions</h1>
+            </div>
             <p className="text-slate-600 mt-2">Manage role-based permissions for the mobile application</p>
           </div>
 
@@ -55,7 +59,7 @@ export default function PermissionsPage() {
                 <ul className="space-y-3">
                   {rolePerms.permissions.map((perm, idx) => (
                     <li key={idx} className="flex items-center gap-3">
-                      <span className="text-green-500 font-bold">✓</span>
+                      <Check size={16} className="text-green-500" />
                       <span className="text-sm text-slate-700">{perm}</span>
                     </li>
                   ))}

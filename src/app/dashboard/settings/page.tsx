@@ -3,6 +3,7 @@
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { useState } from 'react';
+import { Settings } from 'lucide-react';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
@@ -32,7 +33,10 @@ export default function SettingsPage() {
         <Header />
         <main className="p-8 bg-slate-50 min-h-screen">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
+            <div className="flex items-center gap-3">
+              <Settings size={24} className="text-blue-600" />
+              <h1 className="text-3xl font-bold text-slate-900">Settings</h1>
+            </div>
             <p className="text-slate-600 mt-2">Configure system settings and preferences</p>
           </div>
 

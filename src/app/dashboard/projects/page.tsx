@@ -2,6 +2,7 @@
 
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
+import { FolderKanban } from 'lucide-react';
 
 export default function ProjectsPage() {
   const projects = [
@@ -18,7 +19,10 @@ export default function ProjectsPage() {
         <Header />
         <main className="p-8 bg-slate-50 min-h-screen">
           <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900">Projects</h1>
+            <div className="flex items-center gap-3">
+              <FolderKanban size={24} className="text-blue-600" />
+              <h1 className="text-3xl font-bold text-slate-900">Projects</h1>
+            </div>
             <p className="text-slate-600 mt-2">View and manage all construction projects</p>
           </div>
 

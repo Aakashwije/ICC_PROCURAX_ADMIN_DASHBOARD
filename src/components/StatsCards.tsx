@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
+import type { ReactNode } from 'react';
+import { Clock, FolderKanban, Smartphone, Users } from 'lucide-react';
 
 interface StatCard {
   title: string;
   value: string | number;
   change: number;
-  icon: string;
+  icon: ReactNode;
   color: string;
 }
 
@@ -16,28 +17,28 @@ export default function StatsCards() {
       title: 'Total Project Managers',
       value: 24,
       change: 12,
-      icon: '👥',
+      icon: <Users size={24} className="text-blue-600" />,
       color: 'bg-blue-50',
     },
     {
       title: 'Active Projects',
       value: 18,
       change: 8,
-      icon: '🏗️',
+      icon: <FolderKanban size={24} className="text-green-600" />,
       color: 'bg-green-50',
     },
     {
       title: 'Mobile App Access',
       value: '92%',
       change: 5,
-      icon: '📱',
+      icon: <Smartphone size={24} className="text-purple-600" />,
       color: 'bg-purple-50',
     },
     {
       title: 'Pending Approvals',
       value: 3,
       change: -2,
-      icon: '⏳',
+      icon: <Clock size={24} className="text-orange-600" />,
       color: 'bg-orange-50',
     },
   ];
