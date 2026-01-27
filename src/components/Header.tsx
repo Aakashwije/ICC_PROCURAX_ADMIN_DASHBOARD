@@ -1,5 +1,7 @@
 'use client';
 
+import { Bell, Settings, User } from "lucide-react";
+
 export default function Header() {
   const getCurrentDate = () => {
     const options: Intl.DateTimeFormatOptions = {
@@ -19,15 +21,27 @@ export default function Header() {
           <p className="text-sm text-slate-600 mt-1">{getCurrentDate()}</p>
         </div>
         <div className="flex items-center gap-4">
-          <button className="p-2 hover:bg-slate-100 rounded-lg transition">🔔</button>
-          <button className="p-2 hover:bg-slate-100 rounded-lg transition">⚙️</button>
+          <button
+            aria-label="Notifications"
+            className="p-2 hover:bg-slate-100 rounded-lg transition"
+          >
+            <Bell size={18} className="text-slate-700" />
+          </button>
+
+          <button
+            aria-label="Settings"
+            className="p-2 hover:bg-slate-100 rounded-lg transition"
+          >
+            <Settings size={18} className="text-slate-700" />
+          </button>
+
           <div className="flex items-center gap-3 pl-4 border-l border-slate-200">
             <div className="text-right">
               <p className="text-sm font-medium text-slate-900">Admin User</p>
               <p className="text-xs text-slate-600">Administrator</p>
             </div>
             <div className="w-10 h-10 bg-linear-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
-              A
+              <User size={16} />
             </div>
           </div>
         </div>
