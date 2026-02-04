@@ -7,10 +7,7 @@ export default function Header() {
   const router = useRouter();
 
   const handleLogout = () => {
-    // Clear saved credentials
-    localStorage.removeItem('rememberedEmail');
-    localStorage.removeItem('rememberedPassword');
-    // Redirect to login page
+    // Redirect to login page (keep saved credentials if remember me was checked)
     router.push('/login');
   };
   const getCurrentDate = () => {
