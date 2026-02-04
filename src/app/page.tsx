@@ -1,74 +1,121 @@
-import Link from 'next/link';
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { LayoutDashboard } from "lucide-react";
-
-
+import { LogIn, Lock, Mail } from "lucide-react";
 
 export default function Home() {
-  return (
-    <div className="min-h-screen bg-linear-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
-      <div className="text-center max-w-2xl">
-        <div className="mb-8">
-          <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center mx-auto mb-6 overflow-hidden">
-  <Image
-    src="/icc_logo.jpg"
-    alt="ICC Logo"
-    width={90}
-    height={90}
-    className="object-contain"
-    priority
-  />
-</div>
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <LayoutDashboard className="text-blue-400" size={32} />
-            <h1 className="text-5xl font-bold text-white">ICC PROCURAX ADMIN DASHBOARD</h1>
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
+
+    // Simulate authentication
+    setTimeout(() => {
+      if (email && password) {
+        router.push("/dashboard");
+      } else {
+        setError("Please enter both email and password");
+      }
+      setIsLoading(false);
+    }, 1000);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="bg-white rounded-lg shadow-2xl p-8">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <div className="w-20 h-20 bg-white rounded-lg flex items-center justify-center mx-auto mb-4 overflow-hidden border border-slate-200">
+              <Image
+                src="/icc_logo.jpg"
+                alt="ICC Logo"
+                width={80}
+                height={80}
+                className="object-contain"
+                priority
+              />
+            </div>
+
+            <h1 className="text-2xl font-bold text-slate-800 mb-2">ICC Procurax Admin</h1>
+            <p className="text-slate-600 text-sm">Sign in to access the dashboard</p>
           </div>
-          <p className="text-xl text-slate-300 mb-8">
-            Admin Dashboard for Managing Project Managers and Mobile App Access
+
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+                Email Address
+              </label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+                <input
+                  id="email"
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800"
+                  placeholder="admin@iccprocurax.com"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
+                Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" size={20} />
+                <input
+                  id="password"
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800"
+                  placeholder="Enter your password"
+                  required
+                />
+              </div>
+            </div>
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isLoading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                  Signing in...
+                </>
+              ) : (
+                <>
+                  <LogIn size={20} />
+                  Sign In
+                </>
+              )}
+            </button>
+          </form>
+
+          <p className="text-slate-500 text-xs text-center mt-6">
+            Demo mode: Use any credentials to sign in
           </p>
         </div>
-
-        <div className="bg-slate-800 rounded-lg shadow-2xl p-8 border border-slate-700 mb-8">
-          <h2 className="text-2xl font-bold text-white mb-6">Dashboard Features</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
-            <div className="text-left">
-              <p className="text-blue-400 font-semibold mb-2">✓ Project Manager Management</p>
-              <p className="text-slate-400 text-sm">Add, edit, and manage project managers</p>
-            </div>
-            <div className="text-left">
-              <p className="text-blue-400 font-semibold mb-2">✓ Mobile App Access Control</p>
-              <p className="text-slate-400 text-sm">Grant or revoke access to the mobile app</p>
-            </div>
-            <div className="text-left">
-              <p className="text-blue-400 font-semibold mb-2">✓ Permission Management</p>
-              <p className="text-slate-400 text-sm">Configure role-based permissions</p>
-            </div>
-            <div className="text-left">
-              <p className="text-blue-400 font-semibold mb-2">✓ Activity Monitoring</p>
-              <p className="text-slate-400 text-sm">Track all access requests and changes</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex gap-4 justify-center">
-          <Link
-            href="/login"
-            className="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition"
-          >
-            Go to Dashboard
-          </Link>
-          <Link
-            href="/dashboard"
-            className="border border-white text-white font-semibold py-3 px-8 rounded-lg hover:bg-slate-700 transition"
-          >
-            Admin Access
-          </Link>
-        </div>
-
-        <p className="text-slate-400 text-sm mt-8">
-          This is a demo application. Use any credentials to log in.
-        </p>
       </div>
     </div>
   );
