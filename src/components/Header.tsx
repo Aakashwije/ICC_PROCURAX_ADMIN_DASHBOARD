@@ -56,7 +56,7 @@ export default function Header() {
               <p className="text-sm font-medium text-slate-900">Admin User</p>
               <p className="text-xs text-slate-600">Administrator</p>
             </div>
-            <div className="w-10 h-10 bg-linear-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-600 rounded-full flex items-center justify-center text-white font-bold">
               <User size={16} />
             </div>
           </div>
