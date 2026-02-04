@@ -1,13 +1,19 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface AddManagerFormData {
   name: string;
   email: string;
   phone: string;
-  department: string;
+  projectId: string;
   grantAccess: boolean;
+}
+
+interface Project {
+  id: number;
+  name: string;
+  managerId: string | null;
 }
 
 export default function AddManagerForm() {
@@ -15,11 +21,20 @@ export default function AddManagerForm() {
     name: '',
     email: '',
     phone: '',
-    department: '',
+    projectId: '',
     grantAccess: false,
   });
 
   const [submitted, setSubmitted] = useState(false);
+  const [projects, setProjects] = useState<Project[]>([]);
+
+  // Load projects from localStorage
+  useEffect(() => {
+    const storedProjects = localStorage.getItem('projects');
+    if (storedProjects) {
+      setProjects(JSON.parse(storedProjects));
+    }
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -31,13 +46,49 @@ export default function AddManagerForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Get existing managers from localStorage
+    const storedManagers = localStorage.getItem('projectManagers');
+    const managers = storedManagers ? JSON.parse(storedManagers) : [];
+    
+    // Create new manager object
+    const newManagerId = String(Date.now());
+    const newManager = {
+      id: newManagerId,
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      projects: formData.projectId ? 1 : 0,
+      status: 'active' as const,
+      accessGranted: formData.grantAccess,
+      dateAdded: new Date().toISOString().split('T')[0],
+    };
+    
+    // Add new manager and save to localStorage
+    managers.push(newManager);
+    localStorage.setItem('projectManagers', JSON.stringify(managers));
+    
+    // If a project was selected, assign this manager to it
+    if (formData.projectId) {
+      const storedProjects = localStorage.getItem('projects');
+      if (storedProjects) {
+        const projects = JSON.parse(storedProjects);
+        const updatedProjects = projects.map((project: any) =>
+          String(project.id) === formData.projectId
+            ? { ...project, manager: formData.name, managerId: newManagerId }
+            : project
+        );
+        localStorage.setItem('projects', JSON.stringify(updatedProjects));
+      }
+    }
+    
     setSubmitted(true);
     setTimeout(() => setSubmitted(false), 3000);
     setFormData({
       name: '',
       email: '',
       phone: '',
-      department: '',
+      projectId: '',
       grantAccess: false,
     });
   };
@@ -90,18 +141,19 @@ export default function AddManagerForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Department</label>
+            <label className="block text-sm font-medium text-slate-700 mb-2">Assign to Project</label>
             <select
-              name="department"
-              value={formData.department}
+              name="projectId"
+              value={formData.projectId}
               onChange={handleChange}
-              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800"
             >
-              <option value="">Select Department</option>
-              <option value="construction">Construction</option>
-              <option value="planning">Planning</option>
-              <option value="engineering">Engineering</option>
-              <option value="safety">Safety</option>
+              <option value="">No Project (Unassigned)</option>
+              {projects.map((project) => (
+                <option key={project.id} value={String(project.id)}>
+                  {project.name}
+                </option>
+              ))}
             </select>
           </div>
         </div>
