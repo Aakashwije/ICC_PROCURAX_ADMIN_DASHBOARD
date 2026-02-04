@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { addActivity } from '@/utils/activityLogger';
 
 interface ProjectManager {
   id: string;
@@ -100,13 +101,23 @@ export default function ProjectManagersTable() {
   }, []);
 
   const toggleAccess = (id: string) => {
-    const updatedManagers = managers.map(manager =>
-      manager.id === id
-        ? { ...manager, accessGranted: !manager.accessGranted }
-        : manager
+    const manager = managers.find(m => m.id === id);
+    const updatedManagers = managers.map(m =>
+      m.id === id
+        ? { ...m, accessGranted: !m.accessGranted }
+        : m
     );
     setManagers(updatedManagers);
     localStorage.setItem('projectManagers', JSON.stringify(updatedManagers));
+    
+    // Log activity
+    if (manager) {
+      addActivity(
+        manager.accessGranted ? 'Mobile Access Revoked' : 'Mobile Access Granted',
+        manager.name,
+        manager.accessGranted ? 'access_revoked' : 'access_granted'
+      );
+    }
   };
 
   const updateStatus = (id: string, newStatus: 'active' | 'pending' | 'inactive') => {
@@ -137,6 +148,10 @@ export default function ProjectManagersTable() {
     );
     setManagers(updatedManagers);
     localStorage.setItem('projectManagers', JSON.stringify(updatedManagers));
+    
+    // Log activity
+    addActivity('Manager Information Updated', selectedManager.name, 'manager_edited');
+    
     setShowEditModal(false);
     setSelectedManager(null);
   };
@@ -152,6 +167,9 @@ export default function ProjectManagersTable() {
     const updatedManagers = managers.filter(manager => manager.id !== selectedManager.id);
     setManagers(updatedManagers);
     localStorage.setItem('projectManagers', JSON.stringify(updatedManagers));
+    
+    // Log activity
+    addActivity('Manager Deleted', selectedManager.name, 'manager_deleted');
     
     // Also remove manager from any projects
     const storedProjects = localStorage.getItem('projects');

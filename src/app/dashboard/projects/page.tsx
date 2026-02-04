@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { FolderKanban, Plus, X, ExternalLink, Edit } from 'lucide-react';
+import { addActivity } from '@/utils/activityLogger';
 
 interface Project {
   id: number;
@@ -81,6 +82,10 @@ export default function ProjectsPage() {
     };
     
     setProjects([...projects, newProject]);
+    
+    // Log activity
+    addActivity('New Project Added', projectTitle, 'project_added');
+    
     setProjectTitle('');
     setGoogleSheetUrl('');
     setShowAddModal(false);
@@ -97,16 +102,26 @@ export default function ProjectsPage() {
     if (selectedProjectId === null) return;
 
     const selectedManager = managers.find(m => m.id === selectedManagerId);
+    const project = projects.find(p => p.id === selectedProjectId);
     
-    setProjects(projects.map(project =>
-      project.id === selectedProjectId
+    setProjects(projects.map(p =>
+      p.id === selectedProjectId
         ? { 
-            ...project, 
+            ...p, 
             manager: selectedManagerId ? (selectedManager?.name || 'Unassigned') : 'Unassigned',
             managerId: selectedManagerId || null
           }
-        : project
+        : p
     ));
+    
+    // Log activity
+    if (project && selectedManager) {
+      addActivity(
+        `${selectedManager.name} Assigned to ${project.name}`,
+        selectedManager.name,
+        'project_assigned'
+      );
+    }
 
     setShowAssignModal(false);
     setSelectedProjectId(null);
@@ -114,11 +129,22 @@ export default function ProjectsPage() {
   };
 
   const handleRemoveManager = (projectId: number) => {
-    setProjects(projects.map(project =>
-      project.id === projectId
-        ? { ...project, manager: 'Unassigned', managerId: null }
-        : project
+    const project = projects.find(p => p.id === projectId);
+    
+    setProjects(projects.map(p =>
+      p.id === projectId
+        ? { ...p, manager: 'Unassigned', managerId: null }
+        : p
     ));
+    
+    // Log activity
+    if (project && project.manager !== 'Unassigned') {
+      addActivity(
+        `${project.manager} Removed from ${project.name}`,
+        project.manager,
+        'project_unassigned'
+      );
+    }
   };
 
   return (

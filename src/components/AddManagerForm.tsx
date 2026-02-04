@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { addActivity } from '@/utils/activityLogger';
 
 interface AddManagerFormData {
   name: string;
@@ -68,6 +69,9 @@ export default function AddManagerForm() {
     managers.push(newManager);
     localStorage.setItem('projectManagers', JSON.stringify(managers));
     
+    // Log activity
+    addActivity('New Manager Added', formData.name, 'manager_added');
+    
     // If a project was selected, assign this manager to it
     if (formData.projectId) {
       const storedProjects = localStorage.getItem('projects');
@@ -79,6 +83,12 @@ export default function AddManagerForm() {
             : project
         );
         localStorage.setItem('projects', JSON.stringify(updatedProjects));
+        
+        // Log activity for project assignment
+        const assignedProject = projects.find(p => String(p.id) === formData.projectId);
+        if (assignedProject) {
+          addActivity(`Manager Assigned to ${assignedProject.name}`, formData.name, 'project_assigned');
+        }
       }
     }
     
