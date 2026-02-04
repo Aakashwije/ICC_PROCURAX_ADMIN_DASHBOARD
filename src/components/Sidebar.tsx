@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   Users,
   FolderKanban,
-  KeyRound,
   BarChart3,
   Settings,
   ChevronLeft,
@@ -22,7 +21,6 @@ export default function Sidebar() {
     { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
     { name: "Project Managers", icon: Users, href: "/dashboard/managers" },
     { name: "Projects", icon: FolderKanban, href: "/dashboard/projects" },
-    { name: "Permissions", icon: KeyRound, href: "/dashboard/permissions" },
     { name: "Reports", icon: BarChart3, href: "/dashboard/reports" },
     { name: "Settings", icon: Settings, href: "/dashboard/settings" },
   ];
