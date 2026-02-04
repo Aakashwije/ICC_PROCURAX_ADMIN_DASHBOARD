@@ -11,6 +11,33 @@ export default function HomePage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [passwordWarning, setPasswordWarning] = useState("");
+
+  const checkPasswordStrength = (pass: string) => {
+    if (pass.length === 0) return;
+    
+    if (pass.length < 8) {
+      setPasswordWarning("⚠️ Weak password: Use at least 8 characters for better security.");
+      return;
+    }
+    
+    const hasNumber = /\d/.test(pass);
+    const hasLetter = /[a-zA-Z]/.test(pass);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+    
+    const commonPasswords = ['password', '123456', 'qwerty', 'abc123', 'letmein', 'admin', 'welcome'];
+    const isCommon = commonPasswords.some(common => pass.toLowerCase().includes(common));
+    
+    if (isCommon) {
+      setPasswordWarning("⚠️ This is a commonly used password. Consider using a stronger one.");
+    } else if (!hasNumber || !hasLetter) {
+      setPasswordWarning("⚠️ Weak password: Include both letters and numbers for better security.");
+    } else if (!hasSpecial) {
+      setPasswordWarning("⚠️ Good password, but adding special characters would make it stronger.");
+    } else {
+      setPasswordWarning("");
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -85,13 +112,23 @@ export default function HomePage() {
                   id="password"
                   type="password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={(e) => {
+                    setPassword(e.target.value);
+                    checkPasswordStrength(e.target.value);
+                  }}
                   className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-slate-800"
                   placeholder="Enter your password"
                   required
                 />
               </div>
             </div>
+
+            {passwordWarning && (
+              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm">
+                {passwordWarning}
+                <p className="text-xs mt-1 text-yellow-700">You can still continue if you wish.</p>
+              </div>
+            )}
 
             <button
               type="submit"
