@@ -1,8 +1,18 @@
 'use client';
 
-import { Bell, Settings, User } from "lucide-react";
+import { Bell, Settings, User, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function Header() {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    // Clear saved credentials
+    localStorage.removeItem('rememberedEmail');
+    localStorage.removeItem('rememberedPassword');
+    // Redirect to login page
+    router.push('/login');
+  };
   const getCurrentDate = () => {
     const options: Intl.DateTimeFormatOptions = {
       weekday: 'long',
@@ -33,6 +43,15 @@ export default function Header() {
             className="p-2 hover:bg-slate-100 rounded-lg transition"
           >
             <Settings size={18} className="text-slate-700" />
+          </button>
+
+          <button
+            aria-label="Logout"
+            onClick={handleLogout}
+            className="p-2 hover:bg-red-50 rounded-lg transition flex items-center gap-2 text-red-600 hover:text-red-700"
+            title="Logout"
+          >
+            <LogOut size={18} />
           </button>
 
           <div className="flex items-center gap-3 pl-4 border-l border-slate-200">

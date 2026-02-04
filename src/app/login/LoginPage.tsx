@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
@@ -12,33 +12,19 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [passwordWarning, setPasswordWarning] = useState("");
+  const [rememberMe, setRememberMe] = useState(false);
 
-  const checkPasswordStrength = (pass: string) => {
-    if (pass.length === 0) return;
+  useEffect(() => {
+    // Load saved credentials on component mount
+    const savedEmail = localStorage.getItem('rememberedEmail');
+    const savedPassword = localStorage.getItem('rememberedPassword');
     
-    if (pass.length < 8) {
-      setPasswordWarning("⚠️ Weak password: Use at least 8 characters for better security.");
-      return;
+    if (savedEmail && savedPassword) {
+      setEmail(savedEmail);
+      setPassword(savedPassword);
+      setRememberMe(true);
     }
-    
-    const hasNumber = /\d/.test(pass);
-    const hasLetter = /[a-zA-Z]/.test(pass);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
-    
-    const commonPasswords = ['password', '123456', 'qwerty', 'abc123', 'letmein', 'admin', 'welcome'];
-    const isCommon = commonPasswords.some(common => pass.toLowerCase().includes(common));
-    
-    if (isCommon) {
-      setPasswordWarning("⚠️ This is a commonly used password. Consider using a stronger one.");
-    } else if (!hasNumber || !hasLetter) {
-      setPasswordWarning("⚠️ Weak password: Include both letters and numbers for better security.");
-    } else if (!hasSpecial) {
-      setPasswordWarning("⚠️ Good password, but adding special characters would make it stronger.");
-    } else {
-      setPasswordWarning("");
-    }
-  };
+  }, []);
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -48,6 +34,15 @@ export default function LoginPage() {
     // Simulate authentication
     setTimeout(() => {
       if (email && password) {
+        // Save or clear credentials based on rememberMe checkbox
+        if (rememberMe) {
+          localStorage.setItem('rememberedEmail', email);
+          localStorage.setItem('rememberedPassword', password);
+        } else {
+          localStorage.removeItem('rememberedEmail');
+          localStorage.removeItem('rememberedPassword');
+        }
+        
         router.push("/dashboard");
       } else {
         setError("Please enter both email and password");
@@ -99,7 +94,7 @@ export default function LoginPage() {
                   id="email"
                   name="email"
                   type="email"
-                  autoComplete="username"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
@@ -121,10 +116,7 @@ export default function LoginPage() {
                   type="password"
                   autoComplete="current-password"
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    checkPasswordStrength(e.target.value);
-                  }}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black"
                   placeholder="Enter your password"
                   required
@@ -132,16 +124,14 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {passwordWarning && (
-              <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 px-4 py-3 rounded-lg text-sm">
-                {passwordWarning}
-                <p className="text-xs mt-1 text-yellow-700">You can still continue if you wish.</p>
-              </div>
-            )}
-
             <div className="flex items-center justify-between text-sm">
               <label className="flex items-center gap-2 cursor-pointer">
-                <input type="checkbox" className="w-4 h-4 rounded" />
+                <input 
+                  type="checkbox" 
+                  className="w-4 h-4 rounded"
+                  checked={rememberMe}
+                  onChange={(e) => setRememberMe(e.target.checked)}
+                />
                 <span className="text-slate-700">Remember me</span>
               </label>
               <Link
