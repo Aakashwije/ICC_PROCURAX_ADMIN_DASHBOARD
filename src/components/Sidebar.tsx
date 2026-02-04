@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
   Users,
-  ShieldCheck,
   FolderKanban,
   KeyRound,
   BarChart3,
@@ -22,7 +21,6 @@ export default function Sidebar() {
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
     { name: "Project Managers", icon: Users, href: "/dashboard/managers" },
-    { name: "Access Control", icon: ShieldCheck, href: "/dashboard/access" },
     { name: "Projects", icon: FolderKanban, href: "/dashboard/projects" },
     { name: "Permissions", icon: KeyRound, href: "/dashboard/permissions" },
     { name: "Reports", icon: BarChart3, href: "/dashboard/reports" },
