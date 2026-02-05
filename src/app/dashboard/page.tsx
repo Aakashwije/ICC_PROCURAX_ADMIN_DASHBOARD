@@ -7,7 +7,7 @@ import StatsCards from '@/components/StatsCards';
 import {
   Activity,
   CheckCircle2,
-  Gauge,
+  Calendar as CalendarIcon,
   Settings as SettingsIcon,
   UserPlus,
   XCircle,
@@ -33,6 +33,41 @@ interface Project {
 export default function DashboardPage() {
   const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
+  const [currentDate, setCurrentDate] = useState(new Date());
+
+  // Generate calendar days
+  const generateCalendar = () => {
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth();
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const daysInMonth = lastDay.getDate();
+    const startingDayOfWeek = firstDay.getDay();
+    
+    const days = [];
+    // Add empty cells for days before the first day of the month
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null);
+    }
+    // Add the days of the month
+    for (let day = 1; day <= daysInMonth; day++) {
+      days.push(day);
+    }
+    return days;
+  };
+
+  const isToday = (day: number | null) => {
+    if (!day) return false;
+    const today = new Date();
+    return (
+      day === today.getDate() &&
+      currentDate.getMonth() === today.getMonth() &&
+      currentDate.getFullYear() === today.getFullYear()
+    );
+  };
+
+  const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   useEffect(() => {
     // Load activities from localStorage
@@ -144,25 +179,57 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* Quick Stats */}
+            {/* Calendar */}
             <div className="bg-white rounded-lg shadow-md p-6">
               <div className="flex items-center gap-3 mb-4">
-                <Gauge size={20} className="text-blue-600" />
-                <h2 className="text-xl font-bold text-slate-900">Quick Stats</h2>
+                <CalendarIcon size={20} className="text-blue-600" />
+                <h2 className="text-xl font-bold text-slate-900">Calendar</h2>
               </div>
-              <div className="space-y-4">
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-slate-600 mb-1">Approval Pending</p>
-                  <p className="text-2xl font-bold text-blue-600">0</p>
-                </div>
-                <div className="p-4 bg-green-50 rounded-lg">
-                  <p className="text-sm text-slate-600 mb-1">Access Granted</p>
-                  <p className="text-2xl font-bold text-green-600">0</p>
-                </div>
-                <div className="p-4 bg-orange-50 rounded-lg">
-                  <p className="text-sm text-slate-600 mb-1">Pending Requests</p>
-                  <p className="text-2xl font-bold text-orange-600">0</p>
-                </div>
+              <div className="mb-4 flex items-center justify-between">
+                <button
+                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))}
+                  className="px-3 py-1 text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                >
+                  ← Prev
+                </button>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                </h3>
+                <button
+                  onClick={() => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))}
+                  className="px-3 py-1 text-slate-600 hover:bg-slate-100 rounded-lg transition"
+                >
+                  Next →
+                </button>
+              </div>
+              <button
+                onClick={() => setCurrentDate(new Date())}
+                className="w-full mb-3 px-3 py-2 text-sm text-blue-600 hover:bg-blue-50 rounded-lg transition font-medium"
+              >
+                Today
+              </button>
+              <div className="grid grid-cols-7 gap-1 mb-2">
+                {dayNames.map((day) => (
+                  <div key={day} className="text-center text-xs font-semibold text-slate-600 py-2">
+                    {day}
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-7 gap-1">
+                {generateCalendar().map((day, index) => (
+                  <div
+                    key={index}
+                    className={`aspect-square flex items-center justify-center text-sm rounded-lg ${
+                      day === null
+                        ? ''
+                        : isToday(day)
+                        ? 'bg-blue-600 text-white font-bold'
+                        : 'bg-slate-50 text-slate-900 hover:bg-slate-100'
+                    }`}
+                  >
+                    {day}
+                  </div>
+                ))}
               </div>
             </div>
           </div>
