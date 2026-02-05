@@ -232,9 +232,16 @@ export default function ProjectsPage() {
                   </button>
                   <button 
                     onClick={() => handleViewDetails(project)}
-                    className="flex-1 text-blue-600 font-medium hover:text-blue-800 transition"
+                    className="flex-1 text-blue-600 font-medium hover:text-blue-800 transition border border-blue-600 hover:bg-blue-50 py-2 rounded-lg"
                   >
                     View Details →
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteClick(project)}
+                    className="text-red-600 font-medium hover:text-red-800 transition border border-red-600 hover:bg-red-50 py-2 px-4 rounded-lg"
+                    title="Delete Project"
+                  >
+                    Delete
                   </button>
                 </div>
               </div>
@@ -463,6 +470,49 @@ export default function ProjectsPage() {
                       Close
                     </button>
                   </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Delete Confirmation Modal */}
+          {showDeleteConfirm && selectedProject && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg shadow-2xl p-6 max-w-md w-full">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-2xl font-bold text-slate-900">Confirm Delete</h2>
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setSelectedProject(null);
+                    }}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition"
+                  >
+                    <X size={20} className="text-slate-600" />
+                  </button>
+                </div>
+                
+                <p className="text-slate-600 mb-6">
+                  Are you sure you want to delete <strong>{selectedProject.name}</strong>? 
+                  This action cannot be undone.
+                </p>
+                
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setSelectedProject(null);
+                    }}
+                    className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-3 px-4 rounded-lg transition"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDeleteConfirm}
+                    className="flex-1 bg-red-600 hover:bg-red-700 text-white font-medium py-3 px-4 rounded-lg transition"
+                  >
+                    Delete Project
+                  </button>
                 </div>
               </div>
             </div>
