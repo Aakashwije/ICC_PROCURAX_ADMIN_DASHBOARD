@@ -197,18 +197,6 @@ export default function ProjectsPage() {
                     {project.status}
                   </span>
                 </div>
-                <div className="mb-4">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-sm font-medium text-slate-700">Progress</span>
-                    <span className="text-sm font-bold text-slate-900">{project.progress}%</span>
-                  </div>
-                  <div className="w-full bg-slate-200 rounded-full h-2">
-                    <div
-                      className="bg-blue-600 h-2 rounded-full transition-all"
-                      style={{ width: `${project.progress}%` }}
-                    ></div>
-                  </div>
-                </div>
                 <div className="flex items-center gap-2 mb-4">
                   <ExternalLink size={16} className="text-slate-400" />
                   <a 
