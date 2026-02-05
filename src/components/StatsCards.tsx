@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import type { ReactNode } from 'react';
 import { Clock, FolderKanban, Smartphone, Users } from 'lucide-react';
 
@@ -12,31 +13,71 @@ interface StatCard {
 }
 
 export default function StatsCards() {
+  const [totalManagers, setTotalManagers] = useState(0);
+  const [activeProjects, setActiveProjects] = useState(0);
+  const [accessGrantedCount, setAccessGrantedCount] = useState(0);
+  const [pendingCount, setPendingCount] = useState(0);
+
+  useEffect(() => {
+    const updateStats = () => {
+      // Get total project managers
+      const storedManagers = localStorage.getItem('projectManagers');
+      if (storedManagers) {
+        const managers = JSON.parse(storedManagers);
+        setTotalManagers(managers.length);
+        
+        // Calculate access granted percentage
+        const grantedCount = managers.filter((m: any) => m.accessGranted).length;
+        setAccessGrantedCount(managers.length > 0 ? Math.round((grantedCount / managers.length) * 100) : 0);
+        
+        // Calculate pending approvals
+        const pending = managers.filter((m: any) => m.status === 'pending').length;
+        setPendingCount(pending);
+      }
+
+      // Get active projects
+      const storedProjects = localStorage.getItem('projects');
+      if (storedProjects) {
+        const projects = JSON.parse(storedProjects);
+        const active = projects.filter((p: any) => p.status === 'Active').length;
+        setActiveProjects(active);
+      }
+    };
+
+    // Initial update
+    updateStats();
+
+    // Update every second to reflect changes
+    const interval = setInterval(updateStats, 1000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   const stats: StatCard[] = [
     {
       title: 'Total Project Managers',
-      value: 24,
+      value: totalManagers,
       change: 12,
       icon: <Users size={24} className="text-blue-600" />,
       color: 'bg-blue-50',
     },
     {
       title: 'Active Projects',
-      value: 18,
+      value: activeProjects,
       change: 8,
       icon: <FolderKanban size={24} className="text-green-600" />,
       color: 'bg-green-50',
     },
     {
       title: 'Mobile App Access',
-      value: '92%',
+      value: `${accessGrantedCount}%`,
       change: 5,
       icon: <Smartphone size={24} className="text-purple-600" />,
       color: 'bg-purple-50',
     },
     {
       title: 'Pending Approvals',
-      value: 3,
+      value: pendingCount,
       change: -2,
       icon: <Clock size={24} className="text-orange-600" />,
       color: 'bg-orange-50',
