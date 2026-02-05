@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Clock, FolderKanban, Smartphone, Users } from 'lucide-react';
 
@@ -12,72 +12,68 @@ interface StatCard {
   color: string;
 }
 
+const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+
 export default function StatsCards() {
-  const [totalManagers, setTotalManagers] = useState(0);
-  const [activeProjects, setActiveProjects] = useState(0);
-  const [accessGrantedCount, setAccessGrantedCount] = useState(0);
-  const [pendingCount, setPendingCount] = useState(0);
+  const [stats, setStats] = useState({
+    totalManagers: 0,
+    activeProjects: 0,
+    accessGrantedPercent: 0,
+    pendingApprovals: 0,
+  });
+
+  const token =
+    typeof window !== 'undefined'
+      ? localStorage.getItem('token')
+      : null;
+
+  // ------------------------------------
+  // Fetch dashboard stats from backend
+  // ------------------------------------
+  const fetchStats = async () => {
+    try {
+      const res = await fetch(`${API}/api/admin/dashboard-stats`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const data = await res.json();
+      setStats(data);
+    } catch (err) {
+      console.error('Failed to load dashboard stats', err);
+    }
+  };
 
   useEffect(() => {
-    const updateStats = () => {
-      // Get total project managers
-      const storedManagers = localStorage.getItem('projectManagers');
-      if (storedManagers) {
-        const managers = JSON.parse(storedManagers);
-        setTotalManagers(managers.length);
-        
-        // Calculate access granted percentage
-        const grantedCount = managers.filter((m: any) => m.accessGranted).length;
-        setAccessGrantedCount(managers.length > 0 ? Math.round((grantedCount / managers.length) * 100) : 0);
-        
-        // Calculate pending approvals
-        const pending = managers.filter((m: any) => m.status === 'pending').length;
-        setPendingCount(pending);
-      }
-
-      // Get active projects
-      const storedProjects = localStorage.getItem('projects');
-      if (storedProjects) {
-        const projects = JSON.parse(storedProjects);
-        const active = projects.filter((p: any) => p.status === 'Active').length;
-        setActiveProjects(active);
-      }
-    };
-
-    // Initial update
-    updateStats();
-
-    // Update every second to reflect changes
-    const interval = setInterval(updateStats, 1000);
-
-    return () => clearInterval(interval);
+    fetchStats();
   }, []);
 
-  const stats: StatCard[] = [
+  const cards: StatCard[] = [
     {
       title: 'Total Project Managers',
-      value: totalManagers,
+      value: stats.totalManagers,
       change: 12,
       icon: <Users size={24} className="text-blue-600" />,
       color: 'bg-blue-50',
     },
     {
       title: 'Active Projects',
-      value: activeProjects,
+      value: stats.activeProjects,
       change: 8,
       icon: <FolderKanban size={24} className="text-green-600" />,
       color: 'bg-green-50',
     },
     {
       title: 'Mobile App Access',
-      value: `${accessGrantedCount}%`,
+      value: `${stats.accessGrantedPercent}%`,
       change: 5,
       icon: <Smartphone size={24} className="text-purple-600" />,
       color: 'bg-purple-50',
     },
     {
       title: 'Pending Approvals',
-      value: pendingCount,
+      value: stats.pendingApprovals,
       change: -2,
       icon: <Clock size={24} className="text-orange-600" />,
       color: 'bg-orange-50',
@@ -86,17 +82,26 @@ export default function StatsCards() {
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-      {stats.map((stat) => (
+      {cards.map((stat) => (
         <div
           key={stat.title}
           className={`${stat.color} rounded-lg shadow-md p-6 border-l-4 border-slate-400`}
         >
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-slate-600 text-sm font-medium mb-2">{stat.title}</p>
-              <p className="text-3xl font-bold text-slate-900">{stat.value}</p>
-              <p className={`text-xs mt-2 ${stat.change >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                {stat.change >= 0 ? '↑' : '↓'} {Math.abs(stat.change)}% from last month
+              <p className="text-slate-600 text-sm font-medium mb-2">
+                {stat.title}
+              </p>
+              <p className="text-3xl font-bold text-slate-900">
+                {stat.value}
+              </p>
+              <p
+                className={`text-xs mt-2 ${
+                  stat.change >= 0 ? 'text-green-600' : 'text-red-600'
+                }`}
+              >
+                {stat.change >= 0 ? '↑' : '↓'} {Math.abs(stat.change)}% from last
+                month
               </p>
             </div>
             <div className="text-4xl">{stat.icon}</div>
