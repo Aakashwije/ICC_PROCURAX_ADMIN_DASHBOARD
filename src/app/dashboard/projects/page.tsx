@@ -24,7 +24,9 @@ interface Manager {
 export default function ProjectsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projectTitle, setProjectTitle] = useState('');
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
   const [selectedManagerId, setSelectedManagerId] = useState('');
@@ -147,6 +149,11 @@ export default function ProjectsPage() {
     }
   };
 
+  const handleViewDetails = (project: Project) => {
+    setSelectedProject(project);
+    setShowDetailsModal(true);
+  };
+
   return (
     <div className="flex">
       <Sidebar />
@@ -216,7 +223,10 @@ export default function ProjectsPage() {
                     <Edit size={16} />
                     {project.managerId ? 'Change Manager' : 'Assign Manager'}
                   </button>
-                  <button className="flex-1 text-blue-600 font-medium hover:text-blue-800 transition">
+                  <button 
+                    onClick={() => handleViewDetails(project)}
+                    className="flex-1 text-blue-600 font-medium hover:text-blue-800 transition"
+                  >
                     View Details →
                   </button>
                 </div>
@@ -344,6 +354,106 @@ export default function ProjectsPage() {
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition"
                     >
                       Save Assignment
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Project Details Modal */}
+          {showDetailsModal && selectedProject && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+              <div className="bg-white rounded-lg shadow-2xl p-6 max-w-2xl w-full">
+                <div className="flex items-center justify-between mb-6">
+                  <h2 className="text-2xl font-bold text-slate-900">Project Details</h2>
+                  <button
+                    onClick={() => {
+                      setShowDetailsModal(false);
+                      setSelectedProject(null);
+                    }}
+                    className="p-2 hover:bg-slate-100 rounded-lg transition"
+                  >
+                    <X size={20} className="text-slate-600" />
+                  </button>
+                </div>
+
+                <div className="space-y-6">
+                  {/* Project Name */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Project Name</label>
+                    <p className="text-lg text-slate-900">{selectedProject.name}</p>
+                  </div>
+
+                  {/* Project Manager */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Project Manager</label>
+                    <div className="flex items-center gap-3">
+                      <p className="text-lg text-slate-900">{selectedProject.manager}</p>
+                      {selectedProject.managerId ? (
+                        <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
+                          Assigned
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-semibold rounded-full">
+                          Unassigned
+                        </span>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Status */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Status</label>
+                    <span className={`inline-block px-4 py-2 rounded-lg text-sm font-semibold ${
+                      selectedProject.status === 'Active' 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {selectedProject.status}
+                    </span>
+                  </div>
+
+                  {/* Google Sheet URL */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Google Sheet</label>
+                    <a 
+                      href={selectedProject.sheetUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 text-blue-600 hover:text-blue-800 hover:underline"
+                    >
+                      <ExternalLink size={16} />
+                      <span>Open Google Sheet</span>
+                    </a>
+                    <p className="text-xs text-slate-500 mt-1 break-all">{selectedProject.sheetUrl}</p>
+                  </div>
+
+                  {/* Project ID */}
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">Project ID</label>
+                    <p className="text-sm text-slate-600">#{selectedProject.id}</p>
+                  </div>
+
+                  <div className="flex gap-3 pt-4">
+                    <button
+                      onClick={() => {
+                        setShowDetailsModal(false);
+                        setSelectedProject(null);
+                        handleAssignManager(selectedProject.id);
+                      }}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition"
+                    >
+                      {selectedProject.managerId ? 'Change Manager' : 'Assign Manager'}
+                    </button>
+                    <button
+                      onClick={() => {
+                        setShowDetailsModal(false);
+                        setSelectedProject(null);
+                      }}
+                      className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium py-3 px-4 rounded-lg transition"
+                    >
+                      Close
                     </button>
                   </div>
                 </div>
