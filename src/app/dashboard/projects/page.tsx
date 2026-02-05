@@ -419,13 +419,30 @@ export default function ProjectsPage() {
                   {/* Status */}
                   <div>
                     <label className="block text-sm font-semibold text-slate-700 mb-2">Status</label>
-                    <span className={`inline-block px-4 py-2 rounded-lg text-sm font-semibold ${
-                      selectedProject.status === 'Active' 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {selectedProject.status}
-                    </span>
+                    <select
+                      value={selectedProject.status}
+                      onChange={(e) => {
+                        const newStatus = e.target.value;
+                        const updatedProjects = projects.map(p =>
+                          p.id === selectedProject.id ? { ...p, status: newStatus } : p
+                        );
+                        setProjects(updatedProjects);
+                        setSelectedProject({ ...selectedProject, status: newStatus });
+                        
+                        // Log activity
+                        addActivity(`Project Status Changed to ${newStatus}`, selectedProject.name, 'project_status_changed');
+                      }}
+                      className={`px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer ${
+                        selectedProject.status === 'Active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}
+                    >
+                      <option value="Active">Active</option>
+                      <option value="Planning">Planning</option>
+                      <option value="Completed">Completed</option>
+                      <option value="On Hold">On Hold</option>
+                    </select>
                   </div>
 
                   {/* Google Sheet URL */}
