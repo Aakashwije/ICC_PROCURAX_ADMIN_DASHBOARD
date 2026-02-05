@@ -85,7 +85,7 @@ export default function AddManagerForm() {
         localStorage.setItem('projects', JSON.stringify(updatedProjects));
         
         // Log activity for project assignment
-        const assignedProject = projects.find(p => String(p.id) === formData.projectId);
+        const assignedProject = projects.find((p: Project) => String(p.id) === formData.projectId);
         if (assignedProject) {
           addActivity(`Manager Assigned to ${assignedProject.name}`, formData.name, 'project_assigned');
         }

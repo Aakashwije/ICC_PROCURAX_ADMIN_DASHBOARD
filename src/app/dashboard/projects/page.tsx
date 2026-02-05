@@ -31,29 +31,15 @@ export default function ProjectsPage() {
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
   const [selectedManagerId, setSelectedManagerId] = useState('');
   
-  const [projects, setProjects] = useState<Project[]>([
-    { id: 1, name: 'City Tower Construction', manager: 'John Smith', managerId: '1', progress: 65, status: 'Active', sheetUrl: 'https://docs.google.com/spreadsheets/d/abc123' },
-    { id: 2, name: 'Highway Bridge Project', manager: 'Sarah Johnson', managerId: '2', progress: 45, status: 'Active', sheetUrl: 'https://docs.google.com/spreadsheets/d/def456' },
-    { id: 3, name: 'Residential Complex A', manager: 'John Smith', managerId: '1', progress: 80, status: 'Active', sheetUrl: 'https://docs.google.com/spreadsheets/d/ghi789' },
-    { id: 4, name: 'Shopping Mall Extension', manager: 'Unassigned', managerId: null, progress: 30, status: 'Planning', sheetUrl: 'https://docs.google.com/spreadsheets/d/jkl012' },
-  ]);
-
+  const [projects, setProjects] = useState<Project[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
 
-  // Load managers from localStorage
+  // Load data from localStorage on mount
   useEffect(() => {
     const storedManagers = localStorage.getItem('projectManagers');
     if (storedManagers) {
       setManagers(JSON.parse(storedManagers));
-    } else {
-      // Default managers
-      const defaultManagers = [
-        { id: '1', name: 'John Smith' },
-        { id: '2', name: 'Sarah Johnson' },
-        { id: '3', name: 'Mike Davis' },
-      ];
-      setManagers(defaultManagers);
-      localStorage.setItem('projectManagers', JSON.stringify(defaultManagers));
     }
 
     // Load projects from localStorage
@@ -61,11 +47,13 @@ export default function ProjectsPage() {
     if (storedProjects) {
       setProjects(JSON.parse(storedProjects));
     }
+    
+    setIsLoaded(true);
   }, []);
 
-  // Save projects to localStorage whenever they change
+  // Save projects to localStorage whenever they change (after initial load)
   useEffect(() => {
-    if (projects.length > 0) {
+    if (isLoaded) {
       localStorage.setItem('projects', JSON.stringify(projects));
     }
   }, [projects]);
