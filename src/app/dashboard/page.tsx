@@ -117,15 +117,15 @@ export default function DashboardPage() {
               <div className="space-y-4">
                 <div className="p-4 bg-blue-50 rounded-lg">
                   <p className="text-sm text-slate-600 mb-1">Approval Pending</p>
-                  <p className="text-2xl font-bold text-blue-600">3</p>
+                  <p className="text-2xl font-bold text-blue-600">0</p>
                 </div>
                 <div className="p-4 bg-green-50 rounded-lg">
                   <p className="text-sm text-slate-600 mb-1">Access Granted</p>
-                  <p className="text-2xl font-bold text-green-600">22</p>
+                  <p className="text-2xl font-bold text-green-600">0</p>
                 </div>
                 <div className="p-4 bg-orange-50 rounded-lg">
                   <p className="text-sm text-slate-600 mb-1">Pending Requests</p>
-                  <p className="text-2xl font-bold text-orange-600">5</p>
+                  <p className="text-2xl font-bold text-orange-600">0</p>
                 </div>
               </div>
             </div>
