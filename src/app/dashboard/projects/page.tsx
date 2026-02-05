@@ -53,17 +53,21 @@ export default function ProjectsPage() {
   }, []);
 
   // Save projects to localStorage whenever they change (after initial load)
+  // Note: We're now doing immediate saves in each handler to prevent race conditions
   useEffect(() => {
-    if (isLoaded) {
+    if (isLoaded && projects.length > 0) {
       localStorage.setItem('projects', JSON.stringify(projects));
     }
-  }, [projects]);
+  }, [projects, isLoaded]);
 
   const handleAddProject = (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Generate unique ID by finding the max ID and adding 1
+    const maxId = projects.length > 0 ? Math.max(...projects.map(p => p.id)) : 0;
+    
     const newProject: Project = {
-      id: projects.length + 1,
+      id: maxId + 1,
       name: projectTitle,
       manager: 'Unassigned',
       managerId: null,
@@ -72,7 +76,11 @@ export default function ProjectsPage() {
       sheetUrl: googleSheetUrl,
     };
     
-    setProjects([...projects, newProject]);
+    const updatedProjects = [...projects, newProject];
+    setProjects(updatedProjects);
+    
+    // Immediately save to localStorage to prevent race conditions
+    localStorage.setItem('projects', JSON.stringify(updatedProjects));
     
     // Log activity
     addActivity('New Project Added', projectTitle, 'project_added');
@@ -95,7 +103,7 @@ export default function ProjectsPage() {
     const selectedManager = managers.find(m => m.id === selectedManagerId);
     const project = projects.find(p => p.id === selectedProjectId);
     
-    setProjects(projects.map(p =>
+    const updatedProjects = projects.map(p =>
       p.id === selectedProjectId
         ? { 
             ...p, 
@@ -103,7 +111,12 @@ export default function ProjectsPage() {
             managerId: selectedManagerId || null
           }
         : p
-    ));
+    );
+    
+    setProjects(updatedProjects);
+    
+    // Immediately save to localStorage to prevent race conditions
+    localStorage.setItem('projects', JSON.stringify(updatedProjects));
     
     // Log activity
     if (project && selectedManager) {
@@ -122,11 +135,16 @@ export default function ProjectsPage() {
   const handleRemoveManager = (projectId: number) => {
     const project = projects.find(p => p.id === projectId);
     
-    setProjects(projects.map(p =>
+    const updatedProjects = projects.map(p =>
       p.id === projectId
         ? { ...p, manager: 'Unassigned', managerId: null }
         : p
-    ));
+    );
+    
+    setProjects(updatedProjects);
+    
+    // Immediately save to localStorage to prevent race conditions
+    localStorage.setItem('projects', JSON.stringify(updatedProjects));
     
     // Log activity
     if (project && project.manager !== 'Unassigned') {
@@ -148,6 +166,9 @@ export default function ProjectsPage() {
 
     const updatedProjects = projects.filter(p => p.id !== selectedProject.id);
     setProjects(updatedProjects);
+    
+    // Immediately save to localStorage to prevent race conditions
+    localStorage.setItem('projects', JSON.stringify(updatedProjects));
     
     // Log activity
     addActivity('Project Deleted', selectedProject.name, 'project_deleted');
@@ -428,6 +449,9 @@ export default function ProjectsPage() {
                         );
                         setProjects(updatedProjects);
                         setSelectedProject({ ...selectedProject, status: newStatus });
+                        
+                        // Immediately save to localStorage to prevent race conditions
+                        localStorage.setItem('projects', JSON.stringify(updatedProjects));
                         
                         // Log activity
                         addActivity(`Project Status Changed to ${newStatus}`, selectedProject.name, 'project_status_changed');
