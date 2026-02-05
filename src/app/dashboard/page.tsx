@@ -23,8 +23,16 @@ interface ActivityItem {
   type: string;
 }
 
+interface Project {
+  id: number;
+  name: string;
+  manager: string;
+  status: string;
+}
+
 export default function DashboardPage() {
   const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
 
   useEffect(() => {
     // Load activities from localStorage
@@ -33,6 +41,34 @@ export default function DashboardPage() {
       const activities = JSON.parse(storedActivities);
       setActivityItems(activities.slice(0, 10)); // Show only latest 10
     }
+
+    // Load projects from localStorage
+    const storedProjects = localStorage.getItem('projects');
+    if (storedProjects) {
+      const projectsData = JSON.parse(storedProjects);
+      setProjects(projectsData);
+    }
+
+    // Update every second to reflect changes
+    const interval = setInterval(() => {
+      const storedActivities = localStorage.getItem('recentActivities');
+      if (storedActivities) {
+        const activities = JSON.parse(storedActivities);
+        setActivityItems(activities.slice(0, 10));
+      } else {
+        setActivityItems([]);
+      }
+
+      const storedProjects = localStorage.getItem('projects');
+      if (storedProjects) {
+        const projectsData = JSON.parse(storedProjects);
+        setProjects(projectsData);
+      } else {
+        setProjects([]);
+      }
+    }, 1000);
+
+    return () => clearInterval(interval);
   }, []);
 
   // Function to get time difference
@@ -129,6 +165,35 @@ export default function DashboardPage() {
                 </div>
               </div>
             </div>
+          </div>
+
+          {/* Active Projects Section */}
+          <div className="mt-8 bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <FolderKanban size={20} className="text-blue-600" />
+              <h2 className="text-xl font-bold text-slate-900">Active Projects</h2>
+            </div>
+            {projects.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {projects.map((project) => (
+                  <div key={project.id} className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition">
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold text-slate-900">{project.name}</h3>
+                      <span className={`px-2 py-1 rounded text-xs font-semibold ${
+                        project.status === 'Active' 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-blue-100 text-blue-800'
+                      }`}>
+                        {project.status}
+                      </span>
+                    </div>
+                    <p className="text-sm text-slate-600">Manager: {project.manager}</p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-slate-500 text-sm">No projects available</p>
+            )}
           </div>
         </main>
       </div>

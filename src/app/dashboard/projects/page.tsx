@@ -25,6 +25,7 @@ export default function ProjectsPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projectTitle, setProjectTitle] = useState('');
@@ -67,7 +68,7 @@ export default function ProjectsPage() {
       manager: 'Unassigned',
       managerId: null,
       progress: 0,
-      status: 'Planning',
+      status: 'Active',
       sheetUrl: googleSheetUrl,
     };
     
@@ -135,6 +136,24 @@ export default function ProjectsPage() {
         'project_unassigned'
       );
     }
+  };
+
+  const handleDeleteClick = (project: Project) => {
+    setSelectedProject(project);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteConfirm = () => {
+    if (!selectedProject) return;
+
+    const updatedProjects = projects.filter(p => p.id !== selectedProject.id);
+    setProjects(updatedProjects);
+    
+    // Log activity
+    addActivity('Project Deleted', selectedProject.name, 'project_deleted');
+
+    setShowDeleteConfirm(false);
+    setSelectedProject(null);
   };
 
   const handleViewDetails = (project: Project) => {
