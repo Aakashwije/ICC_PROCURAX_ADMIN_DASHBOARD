@@ -39,7 +39,7 @@ export default function DashboardPage() {
     const storedActivities = localStorage.getItem('recentActivities');
     if (storedActivities) {
       const activities = JSON.parse(storedActivities);
-      setActivityItems(activities.slice(0, 10)); // Show only latest 10
+      setActivityItems(activities.slice(0, 5)); // Show only latest 5
     }
 
     // Load projects from localStorage
@@ -54,7 +54,7 @@ export default function DashboardPage() {
       const storedActivities = localStorage.getItem('recentActivities');
       if (storedActivities) {
         const activities = JSON.parse(storedActivities);
-        setActivityItems(activities.slice(0, 10));
+        setActivityItems(activities.slice(0, 5));
       } else {
         setActivityItems([]);
       }
