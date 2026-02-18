@@ -14,7 +14,7 @@ interface ProjectManager {
   createdAt: string;
 }
 
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { getManagers, updateManager, deleteManager, toggleManagerAccess } from '@/services/api';
 
 export default function ProjectManagersTable() {
   const [managers, setManagers] = useState<ProjectManager[]>([]);
@@ -39,15 +39,10 @@ export default function ProjectManagersTable() {
   // Fetch Project Managers
   // -------------------------------
   const fetchManagers = async () => {
+    if (!token) return;
     try {
       setLoading(true);
-      const res = await fetch(`${API}/api/admin/project-managers`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
+      const data = await getManagers(token);
       setManagers(data);
     } catch (err) {
       console.error('Failed to load managers', err);
@@ -64,12 +59,8 @@ export default function ProjectManagersTable() {
   // Toggle Access (Active / Inactive)
   // -------------------------------
   const toggleAccess = async (manager: ProjectManager) => {
-    await fetch(`${API}/api/admin/project-managers/${manager._id}/access`, {
-      method: 'PATCH',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    if (!token) return;
+    await toggleManagerAccess(token, manager._id);
 
     addActivity(
       manager.isActive ? 'Mobile Access Revoked' : 'Mobile Access Granted',
@@ -87,16 +78,10 @@ export default function ProjectManagersTable() {
     manager: ProjectManager,
     status: 'active' | 'pending' | 'inactive'
   ) => {
-    await fetch(`${API}/api/admin/project-managers/${manager._id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
+    if (!token) return;
+    await updateManager(token, manager._id, {
         isApproved: status === 'active',
         isActive: status !== 'inactive',
-      }),
     });
 
     fetchManagers();
@@ -116,16 +101,9 @@ export default function ProjectManagersTable() {
   };
 
   const handleEditSave = async () => {
-    if (!selectedManager) return;
+    if (!selectedManager || !token) return;
 
-    await fetch(`${API}/api/admin/project-managers/${selectedManager._id}`, {
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(editFormData),
-    });
+    await updateManager(token, selectedManager._id, editFormData);
 
     addActivity(
       'Manager Information Updated',
@@ -142,14 +120,9 @@ export default function ProjectManagersTable() {
   // Delete Manager
   // -------------------------------
   const handleDeleteConfirm = async () => {
-    if (!selectedManager) return;
+    if (!selectedManager || !token) return;
 
-    await fetch(`${API}/api/admin/project-managers/${selectedManager._id}`, {
-      method: 'DELETE',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
+    await deleteManager(token, selectedManager._id);
 
     addActivity(
       'Manager Deleted',

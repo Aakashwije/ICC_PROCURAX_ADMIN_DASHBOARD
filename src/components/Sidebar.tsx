@@ -19,6 +19,7 @@ export default function Sidebar() {
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
     { name: "Project Managers", icon: Users, href: "/dashboard/managers" },
+    { name: "App Users", icon: Users, href: "/dashboard/mobile-users" },
     { name: "Projects", icon: FolderKanban, href: "/dashboard/projects" },
     { name: "Settings", icon: Settings, href: "/dashboard/settings" },
   ];

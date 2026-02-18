@@ -12,6 +12,8 @@ interface StatCard {
   color: string;
 }
 
+import { getStats } from '@/services/api';
+
 const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
 export default function StatsCards() {
@@ -30,15 +32,13 @@ export default function StatsCards() {
   // ------------------------------------
   // Fetch dashboard stats from backend
   // ------------------------------------
+  // ------------------------------------
+  // Fetch dashboard stats from backend
+  // ------------------------------------
   const fetchStats = async () => {
+    if (!token) return;
     try {
-      const res = await fetch(`${API}/api/admin/dashboard-stats`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-
-      const data = await res.json();
+      const data = await getStats(token);
       setStats(data);
     } catch (err) {
       console.error('Failed to load dashboard stats', err);
