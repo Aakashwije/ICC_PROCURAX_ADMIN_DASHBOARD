@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getMobileUsers, approveMobileUser, rejectMobileUser } from '../services/api';
+import { getToken } from '@/utils/auth';
 import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
 
 interface MobileUser {
@@ -12,25 +13,49 @@ interface MobileUser {
   registrationDate: string;
 }
 
+type MobileUserApi = {
+  _id?: string;
+  id?: string;
+  name?: string;
+  email?: string;
+  isApproved?: boolean;
+  isActive?: boolean;
+  createdAt?: string;
+};
+
 export default function MobileUsersTable() {
   const [users, setUsers] = useState<MobileUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
 
-  const token = typeof window !== 'undefined' ? localStorage.getItem('token') : '';
+  const token = getToken();
 
-  const fetchUsers = async () => {
+  const normalizeUsers = (payload: unknown): MobileUser[] => {
+    const users = Array.isArray(payload)
+      ? payload
+      : (payload as { users?: MobileUserApi[] })?.users ?? [];
+
+    const getStatus = (user: MobileUserApi): MobileUser['status'] => {
+      if (user.isApproved) return 'approved';
+      if (user.isActive === false) return 'rejected';
+      return 'pending';
+    };
+
+    return (users as MobileUserApi[]).map((user) => ({
+      id: user._id ?? user.id ?? '',
+      name: user.name ?? 'Unknown',
+      email: user.email ?? '',
+      status: getStatus(user),
+      registrationDate: user.createdAt ?? new Date().toISOString(),
+    }));
+  };
+
+  const fetchUsers = useCallback(async () => {
     if (!token) return;
     try {
       setLoading(true);
       const data = await getMobileUsers(token);
-            // Ensure data is an array before setting it
-      if (Array.isArray(data)) {
-        setUsers(data);
-      } else {
-        console.error("API returned non-array data:", data);
-        setUsers([]); 
-      }
+      setUsers(normalizeUsers(data));
     } catch (err) {
       console.error('Failed to load mobile users', err);
        // Mock data for demonstration if API fails in this environment
@@ -41,11 +66,11 @@ export default function MobileUsersTable() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [token]);
 
   useEffect(() => {
     fetchUsers();
-  }, []);
+  }, [fetchUsers]);
 
   const handleApprove = async (userId: string) => {
     if (!token) return;
@@ -72,6 +97,18 @@ export default function MobileUsersTable() {
       console.error('Failed to reject user', err);
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const getStatusClass = (status: MobileUser['status']) => {
+    switch (status) {
+      case 'approved':
+        return 'bg-green-100 text-green-700';
+      case 'rejected':
+        return 'bg-red-100 text-red-700';
+      case 'pending':
+      default:
+        return 'bg-yellow-100 text-yellow-700';
     }
   };
 
@@ -103,11 +140,11 @@ export default function MobileUsersTable() {
                   <td className="px-6 py-4 text-slate-800 font-medium">{user.name}</td>
                   <td className="px-6 py-4 text-slate-600">{user.email}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                      user.status === 'approved' ? 'bg-green-100 text-green-700' :
-                      user.status === 'rejected' ? 'bg-red-100 text-red-700' :
-                      'bg-yellow-100 text-yellow-700'
-                    }`}>
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${getStatusClass(
+                        user.status
+                      )}`}
+                    >
                       {user.status.charAt(0).toUpperCase() + user.status.slice(1)}
                     </span>
                   </td>

@@ -2,17 +2,39 @@
 
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Settings } from 'lucide-react';
+import { getSettings, updateSettings } from '@/services/api';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
-    apiEndpoint: 'https://api.construction-app.com',
+    apiEndpoint: 'http://localhost:5000',
     emailNotifications: true,
     smsAlerts: false,
     sessionTimeout: '30',
     twoFactorAuth: true,
   });
+
+  const [isSaving, setIsSaving] = useState(false);
+
+  const loadSettings = useCallback(async () => {
+    try {
+      const data = await getSettings();
+      setSettings({
+        apiEndpoint: data.apiEndpoint ?? 'http://localhost:5000',
+        emailNotifications: data.notifications_email ?? data.emailNotifications ?? true,
+        smsAlerts: data.smsAlerts ?? false,
+        sessionTimeout: data.sessionTimeout ?? '30',
+        twoFactorAuth: data.twoFactorAuth ?? true,
+      });
+    } catch (err) {
+      console.error('Failed to load settings', err);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSettings();
+  }, [loadSettings]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -22,8 +44,31 @@ export default function SettingsPage() {
     });
   };
 
-  const handleSave = () => {
-    alert('Settings saved successfully!');
+  const handleSave = async () => {
+    try {
+      setIsSaving(true);
+      const updated = await updateSettings({
+        apiEndpoint: settings.apiEndpoint,
+        notifications_email: settings.emailNotifications,
+        notifications_alerts: settings.smsAlerts,
+        sessionTimeout: settings.sessionTimeout,
+        twoFactorAuth: settings.twoFactorAuth,
+        emailNotifications: settings.emailNotifications,
+        smsAlerts: settings.smsAlerts,
+      });
+
+      setSettings({
+        apiEndpoint: updated.apiEndpoint ?? settings.apiEndpoint,
+        emailNotifications: updated.notifications_email ?? settings.emailNotifications,
+        smsAlerts: updated.notifications_alerts ?? settings.smsAlerts,
+        sessionTimeout: updated.sessionTimeout ?? settings.sessionTimeout,
+        twoFactorAuth: updated.twoFactorAuth ?? settings.twoFactorAuth,
+      });
+    } catch (err) {
+      console.error('Failed to save settings', err);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   return (
@@ -46,10 +91,13 @@ export default function SettingsPage() {
 
               <div className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">API Endpoint</label>
+                  <label htmlFor="apiEndpoint" className="block text-sm font-medium text-slate-700 mb-2">
+                    API Endpoint
+                  </label>
                   <input
                     type="text"
                     name="apiEndpoint"
+                    id="apiEndpoint"
                     value={settings.apiEndpoint}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -57,9 +105,12 @@ export default function SettingsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">Session Timeout (minutes)</label>
+                  <label htmlFor="sessionTimeout" className="block text-sm font-medium text-slate-700 mb-2">
+                    Session Timeout (minutes)
+                  </label>
                   <select
                     name="sessionTimeout"
+                    id="sessionTimeout"
                     value={settings.sessionTimeout}
                     onChange={handleChange}
                     className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -113,9 +164,10 @@ export default function SettingsPage() {
                 <div className="flex gap-4 pt-6 border-t border-slate-200">
                   <button
                     onClick={handleSave}
+                    disabled={isSaving}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 rounded-lg transition"
                   >
-                    Save Settings
+                    {isSaving ? 'Saving...' : 'Save Settings'}
                   </button>
                   <button className="flex-1 border border-slate-300 text-slate-700 font-semibold py-3 rounded-lg hover:bg-slate-50 transition">
                     Cancel

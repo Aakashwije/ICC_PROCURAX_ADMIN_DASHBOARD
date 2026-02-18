@@ -13,8 +13,7 @@ interface StatCard {
 }
 
 import { getStats } from '@/services/api';
-
-const API = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
+import { getToken } from '@/utils/auth';
 
 export default function StatsCards() {
   const [stats, setStats] = useState({
@@ -24,11 +23,6 @@ export default function StatsCards() {
     pendingApprovals: 0,
   });
 
-  const token =
-    typeof window !== 'undefined'
-      ? localStorage.getItem('token')
-      : null;
-
   // ------------------------------------
   // Fetch dashboard stats from backend
   // ------------------------------------
@@ -36,16 +30,30 @@ export default function StatsCards() {
   // Fetch dashboard stats from backend
   // ------------------------------------
   const fetchStats = async () => {
+    const token = getToken();
     if (!token) return;
     try {
       const data = await getStats(token);
-      setStats(data);
+      const accessGrantedPercent = data.totalManagers
+        ? Math.round(
+            ((data.totalManagers - data.pendingApprovals) /
+              data.totalManagers) *
+              100
+          )
+        : 0;
+      setStats({
+        totalManagers: data.totalManagers,
+        activeProjects: data.activeProjects,
+        pendingApprovals: data.pendingApprovals,
+        accessGrantedPercent,
+      });
     } catch (err) {
       console.error('Failed to load dashboard stats', err);
     }
   };
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStats();
   }, []);
 

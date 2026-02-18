@@ -2,9 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import Image from "next/image";
 import { LogIn, Lock, Mail } from "lucide-react";
+import { adminLogin } from "@/services/api";
+import {
+  getRememberedEmail,
+  setRememberedEmail,
+  clearRememberedEmail,
+  setToken,
+  getToken,
+} from "@/utils/auth";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,42 +22,52 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false);
 
   useEffect(() => {
-    const savedEmail = localStorage.getItem('rememberedEmail');
-    const savedPassword = localStorage.getItem('rememberedPassword');
-    
-    if (savedEmail && savedPassword) {
+    const existingToken = getToken();
+    if (existingToken) {
+      router.replace("/dashboard");
+      return;
+    }
+
+    const savedEmail = getRememberedEmail();
+
+    if (savedEmail) {
       setEmail(savedEmail);
-      setPassword(savedPassword);
       setRememberMe(true);
     }
-  }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    localStorage.removeItem('rememberedPassword');
+  }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
     setIsLoading(true);
 
-    // Simulate authentication
-    setTimeout(() => {
-      if (email && password) {
+    try {
+      const response = await adminLogin(email, password);
+
+      if (response?.success && response?.token) {
+        setToken(response.token);
         if (rememberMe) {
-          localStorage.setItem('rememberedEmail', email);
-          localStorage.setItem('rememberedPassword', password);
+          setRememberedEmail(email);
         } else {
-          localStorage.removeItem('rememberedEmail');
-          localStorage.removeItem('rememberedPassword');
+          clearRememberedEmail();
         }
-        
+
         router.push("/dashboard");
       } else {
-        setError("Please enter both email and password");
+        setError(response?.message || "Invalid email or password");
       }
+    } catch (err) {
+      console.error("Login failed", err);
+      setError("Unable to login right now. Please try again.");
+    } finally {
       setIsLoading(false);
-    }, 1000);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
+  <div className="min-h-screen bg-linear-to-br from-slate-900 to-slate-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="bg-white rounded-lg shadow-2xl p-8">
           {/* Logo */}
@@ -83,7 +100,10 @@ export default function LoginPage() {
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium text-slate-700 mb-2"
+              >
                 Email Address
               </label>
               <div className="relative">
@@ -103,7 +123,10 @@ export default function LoginPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">
+              <label
+                htmlFor="password"
+                className="block text-sm font-medium text-slate-700 mb-2"
+              >
                 Password
               </label>
               <div className="relative">

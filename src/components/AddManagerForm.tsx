@@ -1,7 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { addActivity } from '@/utils/activityLogger';
+import { getToken } from '@/utils/auth';
+import { addManager, assignManager, getProjects } from '@/services/api';
 
 interface AddManagerFormData {
   name: string;
@@ -12,9 +14,8 @@ interface AddManagerFormData {
 }
 
 interface Project {
-  id: number;
+  id: string;
   name: string;
-  managerId: string | null;
 }
 
 export default function AddManagerForm() {
@@ -28,14 +29,26 @@ export default function AddManagerForm() {
 
   const [submitted, setSubmitted] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
+  const token = getToken();
 
-  // Load projects from localStorage
   useEffect(() => {
-    const storedProjects = localStorage.getItem('projects');
-    if (storedProjects) {
-      setProjects(JSON.parse(storedProjects));
-    }
-  }, []);
+    const loadProjects = async () => {
+      if (!token) return;
+      try {
+        const data = await getProjects(token);
+        setProjects(
+          data.map((project) => ({
+            id: project._id,
+            name: project.name,
+          }))
+        );
+      } catch (err) {
+        console.error('Failed to load projects', err);
+      }
+    };
+
+    void loadProjects();
+  }, [token]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -47,60 +60,53 @@ export default function AddManagerForm() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Get existing managers from localStorage
-    const storedManagers = localStorage.getItem('projectManagers');
-    const managers = storedManagers ? JSON.parse(storedManagers) : [];
-    
-    // Create new manager object
-    const newManagerId = String(Date.now());
-    const newManager = {
-      id: newManagerId,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      projects: formData.projectId ? 1 : 0,
-      status: 'active' as const,
-      accessGranted: formData.grantAccess,
-      dateAdded: new Date().toISOString().split('T')[0],
-    };
-    
-    // Add new manager and save to localStorage
-    managers.push(newManager);
-    localStorage.setItem('projectManagers', JSON.stringify(managers));
-    
-    // Log activity
-    addActivity('New Manager Added', formData.name, 'manager_added');
-    
-    // If a project was selected, assign this manager to it
-    if (formData.projectId) {
-      const storedProjects = localStorage.getItem('projects');
-      if (storedProjects) {
-        const projects = JSON.parse(storedProjects);
-        const updatedProjects = projects.map((project: any) =>
-          String(project.id) === formData.projectId
-            ? { ...project, manager: formData.name, managerId: newManagerId }
-            : project
-        );
-        localStorage.setItem('projects', JSON.stringify(updatedProjects));
-        
-        // Log activity for project assignment
-        const assignedProject = projects.find((p: Project) => String(p.id) === formData.projectId);
-        if (assignedProject) {
-          addActivity(`Manager Assigned to ${assignedProject.name}`, formData.name, 'project_assigned');
+    if (!token) return;
+
+    const submit = async () => {
+      try {
+        const response = await addManager(token, {
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          isActive: formData.grantAccess,
+          isApproved: true,
+        });
+
+        const managerId = response?.manager?._id;
+        addActivity('New Manager Added', formData.name, 'manager_added');
+
+        if (formData.projectId && managerId) {
+          await assignManager(token, {
+            projectId: formData.projectId,
+            managerId,
+          });
+          const assignedProject = projects.find(
+            (project) => project.id === formData.projectId
+          );
+          if (assignedProject) {
+            addActivity(
+              `Manager Assigned to ${assignedProject.name}`,
+              formData.name,
+              'project_assigned'
+            );
+          }
         }
+
+        setSubmitted(true);
+        setTimeout(() => setSubmitted(false), 3000);
+        setFormData({
+          name: '',
+          email: '',
+          phone: '',
+          projectId: '',
+          grantAccess: false,
+        });
+      } catch (err) {
+        console.error('Failed to add manager', err);
       }
-    }
-    
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
-    setFormData({
-      name: '',
-      email: '',
-      phone: '',
-      projectId: '',
-      grantAccess: false,
-    });
+    };
+
+    void submit();
   };
 
   return (
@@ -116,8 +122,14 @@ export default function AddManagerForm() {
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Full Name *</label>
+            <label
+              htmlFor="manager-name"
+              className="block text-sm font-medium text-slate-700 mb-2"
+            >
+              Full Name *
+            </label>
             <input
+              id="manager-name"
               type="text"
               name="name"
               value={formData.name}
@@ -128,8 +140,14 @@ export default function AddManagerForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Email *</label>
+            <label
+              htmlFor="manager-email"
+              className="block text-sm font-medium text-slate-700 mb-2"
+            >
+              Email *
+            </label>
             <input
+              id="manager-email"
               type="email"
               name="email"
               value={formData.email}
@@ -140,8 +158,14 @@ export default function AddManagerForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Phone Number *</label>
+            <label
+              htmlFor="manager-phone"
+              className="block text-sm font-medium text-slate-700 mb-2"
+            >
+              Phone Number *
+            </label>
             <input
+              id="manager-phone"
               type="tel"
               name="phone"
               value={formData.phone}
@@ -152,8 +176,14 @@ export default function AddManagerForm() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-2">Assign to Project *</label>
+            <label
+              htmlFor="manager-project"
+              className="block text-sm font-medium text-slate-700 mb-2"
+            >
+              Assign to Project *
+            </label>
             <select
+              id="manager-project"
               name="projectId"
               value={formData.projectId}
               onChange={handleChange}

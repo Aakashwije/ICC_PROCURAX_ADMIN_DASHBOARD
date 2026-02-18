@@ -34,6 +34,7 @@ export default function DashboardPage() {
   const [activityItems, setActivityItems] = useState<ActivityItem[]>([]);
   const [projects, setProjects] = useState<Project[]>([]);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [now, setNow] = useState(() => Date.now());
 
   // Generate calendar days
   const generateCalendar = () => {
@@ -44,14 +45,14 @@ export default function DashboardPage() {
     const daysInMonth = lastDay.getDate();
     const startingDayOfWeek = firstDay.getDay();
     
-    const days = [];
+    const days: { key: string; day: number | null }[] = [];
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
+      days.push({ key: `empty-${year}-${month}-${i}`, day: null });
     }
     // Add the days of the month
     for (let day = 1; day <= daysInMonth; day++) {
-      days.push(day);
+      days.push({ key: `day-${year}-${month}-${day}`, day });
     }
     return days;
   };
@@ -69,6 +70,7 @@ export default function DashboardPage() {
   const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
+  /* eslint-disable react-hooks/set-state-in-effect */
   useEffect(() => {
     // Load activities from localStorage
     const storedActivities = localStorage.getItem('recentActivities');
@@ -86,6 +88,7 @@ export default function DashboardPage() {
 
     // Update every second to reflect changes
     const interval = setInterval(() => {
+      setNow(Date.now());
       const storedActivities = localStorage.getItem('recentActivities');
       if (storedActivities) {
         const activities = JSON.parse(storedActivities);
@@ -105,17 +108,29 @@ export default function DashboardPage() {
 
     return () => clearInterval(interval);
   }, []);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   // Function to get time difference
   const getTimeAgo = (timestamp: number) => {
-    const diff = Date.now() - timestamp;
+    const diff = now - timestamp;
     const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
 
-    if (minutes < 60) return `${minutes} minute${minutes !== 1 ? 's' : ''} ago`;
-    if (hours < 24) return `${hours} hour${hours !== 1 ? 's' : ''} ago`;
-    return `${days} day${days !== 1 ? 's' : ''} ago`;
+    const pluralize = (value: number, unit: string) =>
+      `${value} ${unit}${value === 1 ? '' : 's'} ago`;
+
+    if (minutes < 60) return pluralize(minutes, 'minute');
+    if (hours < 24) return pluralize(hours, 'hour');
+    return pluralize(days, 'day');
+  };
+
+  const getDayClass = (day: number | null) => {
+    if (!day) return '';
+    if (isToday(day)) {
+      return 'bg-blue-600 text-white font-bold';
+    }
+    return 'bg-slate-50 text-slate-900 hover:bg-slate-100';
   };
 
   const getActivityIcon = (type: string) => {
@@ -158,10 +173,13 @@ export default function DashboardPage() {
               </div>
               <div className="space-y-4">
                 {activityItems.length > 0 ? (
-                  activityItems.map((item, idx) => {
+                  activityItems.map((item) => {
                     const { Icon, bgClass, iconClass } = getActivityIcon(item.type);
                     return (
-                      <div key={idx} className="flex items-center gap-4 pb-4 border-b border-slate-200 last:border-0">
+                      <div
+                        key={`${item.timestamp}-${item.type}`}
+                        className="flex items-center gap-4 pb-4 border-b border-slate-200 last:border-0"
+                      >
                         <div className={`w-10 h-10 ${bgClass} rounded-full flex items-center justify-center`}>
                           <Icon size={18} className={iconClass} />
                         </div>
@@ -216,16 +234,12 @@ export default function DashboardPage() {
                 ))}
               </div>
               <div className="grid grid-cols-7 gap-1">
-                {generateCalendar().map((day, index) => (
+                {generateCalendar().map(({ key, day }) => (
                   <div
-                    key={index}
-                    className={`aspect-square flex items-center justify-center text-sm rounded-lg ${
-                      day === null
-                        ? ''
-                        : isToday(day)
-                        ? 'bg-blue-600 text-white font-bold'
-                        : 'bg-slate-50 text-slate-900 hover:bg-slate-100'
-                    }`}
+                    key={key}
+                    className={`aspect-square flex items-center justify-center text-sm rounded-lg ${getDayClass(
+                      day
+                    )}`}
                   >
                     {day}
                   </div>

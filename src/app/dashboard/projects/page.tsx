@@ -1,17 +1,25 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
 import { FolderKanban, Plus, X, ExternalLink, Edit } from 'lucide-react';
 import { addActivity } from '@/utils/activityLogger';
+import { getToken } from '@/utils/auth';
+import {
+  addProject,
+  assignManager,
+  deleteProject,
+  getManagers,
+  getProjects,
+  updateProject,
+} from '@/services/api';
 
 interface Project {
-  id: number;
+  _id: string;
   name: string;
-  manager: string;
+  managerName: string;
   managerId: string | null;
-  progress: number;
   status: string;
   sheetUrl: string;
 }
@@ -26,7 +34,7 @@ export default function ProjectsPage() {
   const [showAssignModal, setShowAssignModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [selectedProjectId, setSelectedProjectId] = useState<number | null>(null);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [projectTitle, setProjectTitle] = useState('');
   const [googleSheetUrl, setGoogleSheetUrl] = useState('');
@@ -34,65 +42,70 @@ export default function ProjectsPage() {
   
   const [projects, setProjects] = useState<Project[]>([]);
   const [managers, setManagers] = useState<Manager[]>([]);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const token = getToken();
 
-  // Load data from localStorage on mount
+  const fetchProjects = useCallback(async () => {
+    if (!token) return;
+    try {
+      const data = await getProjects(token);
+      setProjects(
+        data.map((project) => ({
+          _id: project._id,
+          name: project.name,
+          managerName: project.managerName ?? 'Unassigned',
+          managerId: project.managerId ?? null,
+          status: project.status ?? 'Active',
+          sheetUrl: project.sheetUrl,
+        }))
+      );
+    } catch (err) {
+      console.error('Failed to load projects', err);
+    }
+  }, [token]);
+
+  const fetchManagers = useCallback(async () => {
+    if (!token) return;
+    try {
+      const data = await getManagers(token);
+      setManagers(
+        data.map((manager) => ({
+          id: manager._id,
+          name: manager.name,
+        }))
+      );
+    } catch (err) {
+      console.error('Failed to load managers', err);
+    }
+  }, [token]);
+
   useEffect(() => {
-    const storedManagers = localStorage.getItem('projectManagers');
-    if (storedManagers) {
-      setManagers(JSON.parse(storedManagers));
-    }
-
-    // Load projects from localStorage
-    const storedProjects = localStorage.getItem('projects');
-    if (storedProjects) {
-      setProjects(JSON.parse(storedProjects));
-    }
-    
-    setIsLoaded(true);
-  }, []);
-
-  // Save projects to localStorage whenever they change (after initial load)
-  // Note: We're now doing immediate saves in each handler to prevent race conditions
-  useEffect(() => {
-    if (isLoaded && projects.length > 0) {
-      localStorage.setItem('projects', JSON.stringify(projects));
-    }
-  }, [projects, isLoaded]);
+    fetchProjects();
+    fetchManagers();
+  }, [fetchManagers, fetchProjects]);
 
   const handleAddProject = (e: React.FormEvent) => {
     e.preventDefault();
-    
-    // Generate unique ID by finding the max ID and adding 1
-    const maxId = projects.length > 0 ? Math.max(...projects.map(p => p.id)) : 0;
-    
-    const newProject: Project = {
-      id: maxId + 1,
-      name: projectTitle,
-      manager: 'Unassigned',
-      managerId: null,
-      progress: 0,
-      status: 'Active',
-      sheetUrl: googleSheetUrl,
+    if (!token) return;
+
+    const submit = async () => {
+      try {
+        await addProject(token, { name: projectTitle, sheetUrl: googleSheetUrl });
+        addActivity('New Project Added', projectTitle, 'project_added');
+        await fetchProjects();
+        setProjectTitle('');
+        setGoogleSheetUrl('');
+        setShowAddModal(false);
+      } catch (err) {
+        console.error('Failed to add project', err);
+      }
     };
-    
-    const updatedProjects = [...projects, newProject];
-    setProjects(updatedProjects);
-    
-    // Immediately save to localStorage to prevent race conditions
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
-    
-    // Log activity
-    addActivity('New Project Added', projectTitle, 'project_added');
-    
-    setProjectTitle('');
-    setGoogleSheetUrl('');
-    setShowAddModal(false);
+
+    void submit();
   };
 
-  const handleAssignManager = (projectId: number) => {
+  const handleAssignManager = (projectId: string) => {
     setSelectedProjectId(projectId);
-    const project = projects.find(p => p.id === projectId);
+    const project = projects.find(p => p._id === projectId);
     setSelectedManagerId(project?.managerId || '');
     setShowAssignModal(true);
   };
@@ -100,60 +113,64 @@ export default function ProjectsPage() {
   const handleSaveAssignment = () => {
     if (selectedProjectId === null) return;
 
+    if (!token) return;
     const selectedManager = managers.find(m => m.id === selectedManagerId);
-    const project = projects.find(p => p.id === selectedProjectId);
-    
-    const updatedProjects = projects.map(p =>
-      p.id === selectedProjectId
-        ? { 
-            ...p, 
-            manager: selectedManagerId ? (selectedManager?.name || 'Unassigned') : 'Unassigned',
-            managerId: selectedManagerId || null
-          }
-        : p
-    );
-    
-    setProjects(updatedProjects);
-    
-    // Immediately save to localStorage to prevent race conditions
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
-    
-    // Log activity
-    if (project && selectedManager) {
-      addActivity(
-        `${selectedManager.name} Assigned to ${project.name}`,
-        selectedManager.name,
-        'project_assigned'
-      );
-    }
+    const project = projects.find(p => p._id === selectedProjectId);
 
-    setShowAssignModal(false);
-    setSelectedProjectId(null);
-    setSelectedManagerId('');
+    const submit = async () => {
+      try {
+        await assignManager(token, {
+          projectId: selectedProjectId,
+          managerId: selectedManagerId || null,
+        });
+        if (project && selectedManager) {
+          addActivity(
+            `${selectedManager.name} Assigned to ${project.name}`,
+            selectedManager.name,
+            'project_assigned'
+          );
+        }
+        if (project && !selectedManagerId) {
+          addActivity(
+            `Manager Removed from ${project.name}`,
+            'System',
+            'project_unassigned'
+          );
+        }
+        await fetchProjects();
+      } catch (err) {
+        console.error('Failed to assign manager', err);
+      } finally {
+        setShowAssignModal(false);
+        setSelectedProjectId(null);
+        setSelectedManagerId('');
+      }
+    };
+
+    void submit();
   };
 
-  const handleRemoveManager = (projectId: number) => {
-    const project = projects.find(p => p.id === projectId);
-    
-    const updatedProjects = projects.map(p =>
-      p.id === projectId
-        ? { ...p, manager: 'Unassigned', managerId: null }
-        : p
-    );
-    
-    setProjects(updatedProjects);
-    
-    // Immediately save to localStorage to prevent race conditions
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
-    
-    // Log activity
-    if (project && project.manager !== 'Unassigned') {
-      addActivity(
-        `${project.manager} Removed from ${project.name}`,
-        project.manager,
-        'project_unassigned'
-      );
-    }
+  const handleRemoveManager = (projectId: string) => {
+    if (!token) return;
+    const project = projects.find(p => p._id === projectId);
+
+    const submit = async () => {
+      try {
+        await assignManager(token, { projectId, managerId: null });
+        if (project && project.managerName !== 'Unassigned') {
+          addActivity(
+            `${project.managerName} Removed from ${project.name}`,
+            project.managerName,
+            'project_unassigned'
+          );
+        }
+        await fetchProjects();
+      } catch (err) {
+        console.error('Failed to remove manager', err);
+      }
+    };
+
+    void submit();
   };
 
   const handleDeleteClick = (project: Project) => {
@@ -164,17 +181,21 @@ export default function ProjectsPage() {
   const handleDeleteConfirm = () => {
     if (!selectedProject) return;
 
-    const updatedProjects = projects.filter(p => p.id !== selectedProject.id);
-    setProjects(updatedProjects);
-    
-    // Immediately save to localStorage to prevent race conditions
-    localStorage.setItem('projects', JSON.stringify(updatedProjects));
-    
-    // Log activity
-    addActivity('Project Deleted', selectedProject.name, 'project_deleted');
+    if (!token) return;
+    const submit = async () => {
+      try {
+        await deleteProject(token, selectedProject._id);
+        addActivity('Project Deleted', selectedProject.name, 'project_deleted');
+        await fetchProjects();
+      } catch (err) {
+        console.error('Failed to delete project', err);
+      } finally {
+        setShowDeleteConfirm(false);
+        setSelectedProject(null);
+      }
+    };
 
-    setShowDeleteConfirm(false);
-    setSelectedProject(null);
+    void submit();
   };
 
   const handleViewDetails = (project: Project) => {
@@ -209,15 +230,15 @@ export default function ProjectsPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {projects.map((project) => (
-              <div key={project.id} className="bg-white rounded-lg shadow-md p-6">
+              <div key={project._id} className="bg-white rounded-lg shadow-md p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <h3 className="text-lg font-bold text-slate-900">{project.name}</h3>
                     <div className="flex items-center gap-2 mt-1">
-                      <p className="text-sm text-slate-600">Manager: {project.manager}</p>
+                      <p className="text-sm text-slate-600">Manager: {project.managerName}</p>
                       {project.managerId && (
                         <button
-                          onClick={() => handleRemoveManager(project.id)}
+                          onClick={() => handleRemoveManager(project._id)}
                           className="text-xs text-red-600 hover:text-red-800 font-medium"
                           title="Remove manager"
                         >
@@ -245,7 +266,7 @@ export default function ProjectsPage() {
                 </div>
                 <div className="flex gap-2">
                   <button
-                    onClick={() => handleAssignManager(project.id)}
+                    onClick={() => handleAssignManager(project._id)}
                     className="flex-1 flex items-center justify-center gap-2 text-blue-600 font-medium hover:text-blue-800 transition border border-blue-600 hover:bg-blue-50 py-2 rounded-lg"
                   >
                     <Edit size={16} />
@@ -416,15 +437,15 @@ export default function ProjectsPage() {
                 <div className="space-y-6">
                   {/* Project Name */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Project Name</label>
+                    <p className="block text-sm font-semibold text-slate-700 mb-2">Project Name</p>
                     <p className="text-lg text-slate-900">{selectedProject.name}</p>
                   </div>
 
                   {/* Project Manager */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Project Manager</label>
+                    <p className="block text-sm font-semibold text-slate-700 mb-2">Project Manager</p>
                     <div className="flex items-center gap-3">
-                      <p className="text-lg text-slate-900">{selectedProject.manager}</p>
+                      <p className="text-lg text-slate-900">{selectedProject.managerName}</p>
                       {selectedProject.managerId ? (
                         <span className="px-3 py-1 bg-green-100 text-green-800 text-xs font-semibold rounded-full">
                           Assigned
@@ -439,22 +460,34 @@ export default function ProjectsPage() {
 
                   {/* Status */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Status</label>
+                    <label
+                      htmlFor="project-status"
+                      className="block text-sm font-semibold text-slate-700 mb-2"
+                    >
+                      Status
+                    </label>
                     <select
+                      id="project-status"
                       value={selectedProject.status}
                       onChange={(e) => {
+                        if (!token) return;
                         const newStatus = e.target.value;
-                        const updatedProjects = projects.map(p =>
-                          p.id === selectedProject.id ? { ...p, status: newStatus } : p
-                        );
-                        setProjects(updatedProjects);
-                        setSelectedProject({ ...selectedProject, status: newStatus });
-                        
-                        // Immediately save to localStorage to prevent race conditions
-                        localStorage.setItem('projects', JSON.stringify(updatedProjects));
-                        
-                        // Log activity
-                        addActivity(`Project Status Changed to ${newStatus}`, selectedProject.name, 'project_status_changed');
+                        const submit = async () => {
+                          try {
+                            await updateProject(token, selectedProject._id, { status: newStatus });
+                            setSelectedProject({ ...selectedProject, status: newStatus });
+                            await fetchProjects();
+                            addActivity(
+                              `Project Status Changed to ${newStatus}`,
+                              selectedProject.name,
+                              'project_status_changed'
+                            );
+                          } catch (err) {
+                            console.error('Failed to update project status', err);
+                          }
+                        };
+
+                        void submit();
                       }}
                       className={`px-4 py-2 rounded-lg text-sm font-semibold cursor-pointer ${
                         selectedProject.status === 'Active' 
@@ -471,7 +504,7 @@ export default function ProjectsPage() {
 
                   {/* Google Sheet URL */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Google Sheet</label>
+                    <p className="block text-sm font-semibold text-slate-700 mb-2">Google Sheet</p>
                     <a 
                       href={selectedProject.sheetUrl} 
                       target="_blank" 
@@ -486,8 +519,8 @@ export default function ProjectsPage() {
 
                   {/* Project ID */}
                   <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-2">Project ID</label>
-                    <p className="text-sm text-slate-600">#{selectedProject.id}</p>
+                    <p className="block text-sm font-semibold text-slate-700 mb-2">Project ID</p>
+                    <p className="text-sm text-slate-600">#{selectedProject._id}</p>
                   </div>
 
                   <div className="flex gap-3 pt-4">
@@ -495,7 +528,7 @@ export default function ProjectsPage() {
                       onClick={() => {
                         setShowDetailsModal(false);
                         setSelectedProject(null);
-                        handleAssignManager(selectedProject.id);
+                        handleAssignManager(selectedProject._id);
                       }}
                       className="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-4 rounded-lg transition"
                     >
