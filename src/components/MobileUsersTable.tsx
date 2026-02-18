@@ -123,21 +123,21 @@ export default function MobileUsersTable() {
   return (
     <div className="bg-white rounded-lg shadow-md overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full">
+        <table className="min-w-full text-sm">
           <thead>
-            <tr className="bg-slate-100 border-b border-slate-200">
-              <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Name</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Email</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Status</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Date</th>
-              <th className="px-6 py-4 text-left text-sm font-semibold text-slate-700">Actions</th>
+            <tr className="bg-slate-100 border-b border-slate-200 text-slate-700">
+              <th className="px-6 py-4 text-left font-semibold">Name</th>
+              <th className="px-6 py-4 text-left font-semibold">Email</th>
+              <th className="px-6 py-4 text-left font-semibold">Status</th>
+              <th className="px-6 py-4 text-left font-semibold">Date</th>
+              <th className="px-6 py-4 text-left font-semibold">Actions</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {users.length > 0 ? (
               users.map((user) => (
                 <tr key={user.id} className="hover:bg-slate-50 transition">
-                  <td className="px-6 py-4 text-slate-800 font-medium">{user.name}</td>
+                  <td className="px-6 py-4 text-slate-900 font-medium">{user.name}</td>
                   <td className="px-6 py-4 text-slate-600">{user.email}</td>
                   <td className="px-6 py-4">
                     <span
@@ -157,7 +157,7 @@ export default function MobileUsersTable() {
                         <button
                           onClick={() => handleApprove(user.id)}
                           disabled={actionLoading === user.id}
-                          className="p-1 text-green-600 hover:bg-green-50 rounded transition disabled:opacity-50"
+                          className="p-2 text-green-600 hover:bg-green-50 rounded-full transition disabled:opacity-50"
                           title="Approve"
                         >
                           {actionLoading === user.id ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
@@ -165,12 +165,15 @@ export default function MobileUsersTable() {
                         <button
                           onClick={() => handleReject(user.id)}
                           disabled={actionLoading === user.id}
-                          className="p-1 text-red-600 hover:bg-red-50 rounded transition disabled:opacity-50"
+                          className="p-2 text-red-600 hover:bg-red-50 rounded-full transition disabled:opacity-50"
                           title="Reject"
                         >
                           {actionLoading === user.id ? <Loader2 size={18} className="animate-spin" /> : <XCircle size={18} />}
                         </button>
                       </div>
+                    )}
+                    {user.status !== 'pending' && (
+                      <span className="text-xs text-slate-500">No actions</span>
                     )}
                   </td>
                 </tr>

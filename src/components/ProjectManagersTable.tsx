@@ -171,16 +171,16 @@ export default function ProjectManagersTable() {
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full">
+      <table className="min-w-full text-sm">
         <thead>
-          <tr className="bg-slate-100 border-b-2 border-slate-300">
-            <th className="px-6 py-4 text-left">Name</th>
-            <th className="px-6 py-4 text-left">Email</th>
-            <th className="px-6 py-4 text-left">Projects</th>
-            <th className="px-6 py-4 text-left">Status</th>
-            <th className="px-6 py-4 text-left">Mobile Access</th>
-            <th className="px-6 py-4 text-left">Date Added</th>
-            <th className="px-6 py-4 text-left">Actions</th>
+          <tr className="bg-slate-100 border-b-2 border-slate-300 text-slate-700">
+            <th className="px-6 py-4 text-left font-semibold">Name</th>
+            <th className="px-6 py-4 text-left font-semibold">Email</th>
+            <th className="px-6 py-4 text-left font-semibold">Projects</th>
+            <th className="px-6 py-4 text-left font-semibold">Status</th>
+            <th className="px-6 py-4 text-left font-semibold">Mobile Access</th>
+            <th className="px-6 py-4 text-left font-semibold">Date Added</th>
+            <th className="px-6 py-4 text-left font-semibold">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -188,9 +188,11 @@ export default function ProjectManagersTable() {
             const status = getStatus(manager);
 
             return (
-              <tr key={manager._id} className="border-b">
-                <td className="px-6 py-4">{manager.name}</td>
-                <td className="px-6 py-4">{manager.email}</td>
+              <tr key={manager._id} className="border-b text-slate-700">
+                <td className="px-6 py-4 font-medium text-slate-900">
+                  {manager.name}
+                </td>
+                <td className="px-6 py-4 text-slate-600">{manager.email}</td>
                 <td className="px-6 py-4">{manager.projects}</td>
                 <td className="px-6 py-4">
                   <select
@@ -201,7 +203,7 @@ export default function ProjectManagersTable() {
                         e.target.value as 'active' | 'pending' | 'inactive'
                       )
                     }
-                    className={`px-3 py-1 rounded-full text-xs ${getStatusColor(
+                    className={`px-3 py-1 rounded-full text-xs border border-slate-200 bg-white ${getStatusColor(
                       status
                     )}`}
                   >
@@ -216,7 +218,7 @@ export default function ProjectManagersTable() {
                     className={`px-4 py-2 rounded-lg ${
                       manager.isActive
                         ? 'bg-green-500 text-white'
-                        : 'bg-gray-300 text-gray-700'
+                        : 'bg-gray-200 text-gray-700'
                     }`}
                   >
                     {manager.isActive ? '✓ Granted' : '✗ Denied'}
@@ -228,7 +230,7 @@ export default function ProjectManagersTable() {
                 <td className="px-6 py-4">
                   <button
                     onClick={() => handleEditClick(manager)}
-                    className="text-blue-600 mr-4"
+                    className="text-blue-600 font-medium hover:text-blue-800 mr-4"
                   >
                     Edit
                   </button>
@@ -237,7 +239,7 @@ export default function ProjectManagersTable() {
                       setSelectedManager(manager);
                       setShowDeleteConfirm(true);
                     }}
-                    className="text-red-600"
+                    className="text-red-600 font-medium hover:text-red-800"
                   >
                     Delete
                   </button>
