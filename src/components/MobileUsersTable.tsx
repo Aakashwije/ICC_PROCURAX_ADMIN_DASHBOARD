@@ -1,9 +1,10 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { getMobileUsers, approveMobileUser, rejectMobileUser } from '../services/api';
+import { getMobileUsers, approveMobileUser, rejectMobileUser, assignSheetUrl } from '../services/api';
 import { getToken } from '@/utils/auth';
-import { CheckCircle, XCircle, Loader2 } from 'lucide-react';
+import { CheckCircle, XCircle, Loader2, Link as LinkIcon, Save, X } from 'lucide-react';
+import { saveUserToFirestore, updateUserSheetUrl } from '../utils/firebaseUserSync';
 
 interface MobileUser {
   id: string;
@@ -11,6 +12,7 @@ interface MobileUser {
   email: string;
   status: 'pending' | 'approved' | 'rejected';
   registrationDate: string;
+  googleSheetUrl?: string | null;
 }
 
 type MobileUserApi = {
@@ -21,12 +23,15 @@ type MobileUserApi = {
   isApproved?: boolean;
   isActive?: boolean;
   createdAt?: string;
+  googleSheetUrl?: string | null;
 };
 
 export default function MobileUsersTable() {
   const [users, setUsers] = useState<MobileUser[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [assigningUrlFor, setAssigningUrlFor] = useState<string | null>(null);
+  const [sheetUrlInput, setSheetUrlInput] = useState<string>('');
 
   const token = getToken();
 
@@ -47,6 +52,7 @@ export default function MobileUsersTable() {
       email: user.email ?? '',
       status: getStatus(user),
       registrationDate: user.createdAt ?? new Date().toISOString(),
+      googleSheetUrl: user.googleSheetUrl ?? null,
     }));
   };
 
@@ -72,13 +78,22 @@ export default function MobileUsersTable() {
     fetchUsers();
   }, [fetchUsers]);
 
-  const handleApprove = async (userId: string) => {
+  const handleApprove = async (user: MobileUser) => {
     if (!token) return;
     try {
-      setActionLoading(userId);
-      await approveMobileUser(token, userId);
+      setActionLoading(user.id);
+      await approveMobileUser(token, user.id);
       // Optimistic update
-      setUsers(users.map(u => u.id === userId ? { ...u, status: 'approved' } : u));
+      setUsers(users.map(u => u.id === user.id ? { ...u, status: 'approved' } : u));
+      
+      // Sync to Firestore
+      await saveUserToFirestore(user.id, {
+        name: user.name,
+        email: user.email,
+        isApproved: true,
+        isActive: true,
+      });
+
     } catch (err) {
       console.error('Failed to approve user', err);
     } finally {
@@ -86,15 +101,42 @@ export default function MobileUsersTable() {
     }
   };
 
-  const handleReject = async (userId: string) => {
+  const handleReject = async (user: MobileUser) => {
     if (!token) return;
     try {
-      setActionLoading(userId);
-      await rejectMobileUser(token, userId);
+      setActionLoading(user.id);
+      await rejectMobileUser(token, user.id);
       // Optimistic update
-      setUsers(users.map(u => u.id === userId ? { ...u, status: 'rejected' } : u));
+      setUsers(users.map(u => u.id === user.id ? { ...u, status: 'rejected' } : u));
+      
+      // Sync to Firestore
+      await saveUserToFirestore(user.id, {
+        isApproved: false,
+        isActive: false,
+      });
+
     } catch (err) {
       console.error('Failed to reject user', err);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleAssignSheetUrl = async (user: MobileUser) => {
+    if (!token || !sheetUrlInput.trim()) return;
+    try {
+      setActionLoading('assign_' + user.id);
+      await assignSheetUrl(token, user.id, sheetUrlInput.trim());
+      // Optimistic update
+      setUsers(users.map(u => u.id === user.id ? { ...u, googleSheetUrl: sheetUrlInput.trim() } : u));
+      
+      // Sync to Firestore
+      await updateUserSheetUrl(user.id, sheetUrlInput.trim());
+      
+      setAssigningUrlFor(null);
+      setSheetUrlInput('');
+    } catch (err) {
+      console.error('Failed to assign sheet URL', err);
     } finally {
       setActionLoading(null);
     }
@@ -155,7 +197,7 @@ export default function MobileUsersTable() {
                     {user.status === 'pending' && (
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() => handleApprove(user.id)}
+                          onClick={() => handleApprove(user)}
                           disabled={actionLoading === user.id}
                           className="p-2 text-green-600 hover:bg-green-50 rounded-full transition disabled:opacity-50"
                           title="Approve"
@@ -163,7 +205,7 @@ export default function MobileUsersTable() {
                           {actionLoading === user.id ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
                         </button>
                         <button
-                          onClick={() => handleReject(user.id)}
+                          onClick={() => handleReject(user)}
                           disabled={actionLoading === user.id}
                           className="p-2 text-red-600 hover:bg-red-50 rounded-full transition disabled:opacity-50"
                           title="Reject"
@@ -172,8 +214,52 @@ export default function MobileUsersTable() {
                         </button>
                       </div>
                     )}
-                    {user.status !== 'pending' && (
-                      <span className="text-xs text-slate-500">No actions</span>
+                    {user.status === 'approved' && (
+                      <div className="flex flex-col gap-2">
+                         {assigningUrlFor === user.id ? (
+                            <div className="flex items-center gap-2">
+                              <input 
+                                type="url" 
+                                placeholder="Paste Sheet URL" 
+                                className="border border-slate-300 rounded px-2 py-1 text-xs"
+                                value={sheetUrlInput}
+                                onChange={(e) => setSheetUrlInput(e.target.value)}
+                              />
+                              <button 
+                                onClick={() => handleAssignSheetUrl(user)}
+                                disabled={actionLoading === 'assign_' + user.id}
+                                className="p-1 text-blue-600 hover:bg-blue-50 rounded transition"
+                                title="Save"
+                              >
+                                {actionLoading === 'assign_' + user.id ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
+                              </button>
+                              <button 
+                                onClick={() => { setAssigningUrlFor(null); setSheetUrlInput(''); }}
+                                className="p-1 text-slate-500 hover:bg-slate-50 rounded transition"
+                                title="Cancel"
+                              >
+                                <X size={16} />
+                              </button>
+                            </div>
+                         ) : (
+                           <button
+                             onClick={() => setAssigningUrlFor(user.id)}
+                             className="flex items-center gap-1 text-blue-600 hover:text-blue-800 text-xs font-medium transition"
+                           >
+                             <LinkIcon size={14} /> 
+                             {user.googleSheetUrl ? 'Change Sheet URL' : 'Assign Sheet'}
+                           </button>
+                         )}
+                         
+                         {user.googleSheetUrl && assigningUrlFor !== user.id && (
+                           <a href={user.googleSheetUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-slate-500 truncate max-w-[150px] inline-block hover:underline" title={user.googleSheetUrl}>
+                             Linked Sheet ↗
+                           </a>
+                         )}
+                      </div>
+                    )}
+                    {user.status === 'rejected' && (
+                      <span className="text-xs text-slate-500">Rejected</span>
                     )}
                   </td>
                 </tr>

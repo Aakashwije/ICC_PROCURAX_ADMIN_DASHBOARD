@@ -235,6 +235,18 @@ export async function rejectMobileUser(token: string, userId: string) {
   return res.json();
 }
 
+/**
+ * Assigns a specific Google/Excel Sheet URL to a user.
+ */
+export async function assignSheetUrl(token: string, userId: string, googleSheetUrl: string) {
+  const res = await fetch(`${API_URL}/admin-users/${userId}/sheet-url`, {
+    method: "PATCH",
+    headers: getHeaders(token),
+    body: JSON.stringify({ googleSheetUrl }),
+  });
+  return res.json();
+}
+
 export async function getSettings(): Promise<SettingsData> {
   const res = await fetch(`${API_URL}/api/settings`);
   const parsed = await parseJson(res, (value): value is SettingsResponse => {
