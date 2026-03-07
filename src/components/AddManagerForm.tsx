@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { addActivity } from '@/utils/activityLogger';
 import { getToken } from '@/utils/auth';
 import { addManager, assignManager, getProjects } from '@/services/api';
@@ -30,6 +31,7 @@ export default function AddManagerForm() {
   const [submitted, setSubmitted] = useState(false);
   const [projects, setProjects] = useState<Project[]>([]);
   const token = getToken();
+  const router = useRouter();
 
   useEffect(() => {
     const loadProjects = async () => {
@@ -222,7 +224,8 @@ export default function AddManagerForm() {
             Add Project Manager
           </button>
           <button
-            type="reset"
+            type="button"
+            onClick={() => router.push('/dashboard/managers')}
             className="flex-1 border border-slate-300 text-slate-700 font-semibold py-3 rounded-lg hover:bg-slate-50 transition"
           >
             Cancel
