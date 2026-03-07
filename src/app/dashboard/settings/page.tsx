@@ -1,27 +1,27 @@
+// 'use client' directive — specifies this file runs in the browser where it needs React hooks
 'use client';
 
+// Import layout components present on all dashboard pages
 import Header from '@/components/Header';
 import Sidebar from '@/components/Sidebar';
+
+// Import React hooks for managing UI state and side effects
 import { useCallback, useEffect, useState } from 'react';
+
+// Import lucide-react icons for navigation tabs, inputs, and UI buttons
 import {
-  Settings,
-  User,
-  Building2,
-  Bell,
-  Shield,
-  Users,
-  BarChart3,
-  Globe,
-  Clock,
-  Mail,
-  Phone,
-  Save,
-  RotateCcw,
-  CheckCircle2,
-  ChevronRight,
+  Settings, User, Building2, Bell, Shield, Users, BarChart3, Globe,
+  Clock, Mail, Phone, Save, RotateCcw, CheckCircle2, ChevronRight,
 } from 'lucide-react';
+
+// Import API services specifically built to pull and push admin settings
 import { getSettings, updateSettings } from '@/services/api';
 
+// ═══════════════════════════════════════════════════════
+// TYPES & CONSTANTS
+// ═══════════════════════════════════════════════════════
+
+// Explicit union type defining the exact 7 valid tab keys
 type TabKey =
   | 'profile'
   | 'company'
@@ -31,6 +31,7 @@ type TabKey =
   | 'reports'
   | 'security';
 
+// Array used to map/render the left-hand navigation menu dynamically
 const tabs: { key: TabKey; label: string; icon: React.ElementType; description: string }[] = [
   { key: 'profile', label: 'Admin Profile', icon: User, description: 'Your account details' },
   { key: 'company', label: 'Company Info', icon: Building2, description: 'Organization details' },
@@ -41,12 +42,21 @@ const tabs: { key: TabKey; label: string; icon: React.ElementType; description: 
   { key: 'security', label: 'Security', icon: Shield, description: 'Password & login' },
 ];
 
+// ═══════════════════════════════════════════════════════
+// MAIN COMPONENT: Settings Page
+// ═══════════════════════════════════════════════════════
 export default function SettingsPage() {
-  const [activeTab, setActiveTab] = useState<TabKey>('profile');
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
+  // -- UI State --
+  const [activeTab, setActiveTab] = useState<TabKey>('profile'); // Tracks which tab is currently viewed
+  const [isSaving, setIsSaving] = useState(false);               // Tracks if the Save API request is pending
+  const [saveSuccess, setSaveSuccess] = useState(false);         // Triggers the green "Saved successfully!" checkmark
 
-  // ── Profile settings ──
+  // ═══════════════════════════════════════════════════════
+  // SECTION STATES: Each tab gets its own state object.
+  // We initialize these with sensible default values.
+  // ═══════════════════════════════════════════════════════
+
+  // ── 1. Profile settings ──
   const [profile, setProfile] = useState({
     fullName: 'Admin User',
     email: 'admin@icc-procurax.com',
@@ -55,7 +65,7 @@ export default function SettingsPage() {
     department: 'Operations',
   });
 
-  // ── Company settings ──
+  // ── 2. Company settings ──
   const [company, setCompany] = useState({
     companyName: 'ICC (Pvt) Ltd',
     industry: 'Construction',
@@ -65,7 +75,7 @@ export default function SettingsPage() {
     companySize: '50-100',
   });
 
-  // ── User management settings ──
+  // ── 3. User management settings ──
   const [userMgmt, setUserMgmt] = useState({
     autoApproveManagers: false,
     autoApproveMobileUsers: false,
@@ -75,7 +85,7 @@ export default function SettingsPage() {
     inactiveAccountDays: '90',
   });
 
-  // ── Notification settings ──
+  // ── 4. Notification settings (Integrates with MongoDB) ──
   const [notifications, setNotifications] = useState({
     emailNotifications: true,
     smsAlerts: false,
@@ -87,7 +97,7 @@ export default function SettingsPage() {
     accessChangeAlert: true,
   });
 
-  // ── Display settings ──
+  // ── 5. Display settings ──
   const [display, setDisplay] = useState({
     language: 'en',
     dateFormat: 'MM/DD/YYYY',
@@ -97,7 +107,7 @@ export default function SettingsPage() {
     showWelcomeBanner: true,
   });
 
-  // ── Reports settings ──
+  // ── 6. Reports settings ──
   const [reports, setReports] = useState({
     defaultExportFormat: 'pdf',
     includeCompanyHeader: true,
@@ -107,7 +117,7 @@ export default function SettingsPage() {
     includeCharts: true,
   });
 
-  // ── Security settings ──
+  // ── 7. Security settings (Integrates with MongoDB) ──
   const [security, setSecurity] = useState({
     twoFactorAuth: true,
     sessionTimeout: '30',
@@ -117,15 +127,24 @@ export default function SettingsPage() {
     ipWhitelisting: false,
   });
 
-  // Load API settings and merge
+  // ═══════════════════════════════════════════════════════
+  // DATA FETCHING & PERSISTENCE
+  // ═══════════════════════════════════════════════════════
+
+  // Fetch settings actually supported by the backend MongoDB setup
+  // Wrapped in useCallback so it can be safely used inside useEffect
   const loadSettings = useCallback(async () => {
     try {
-      const data = await getSettings();
+      const data = await getSettings(); // GET /api/admin-settings
+      
+      // Update specific local states based on the API response, falling back to previous state if missing
       setNotifications((prev) => ({
         ...prev,
+        // The API might return notifications_email OR emailNotifications
         emailNotifications: data.notifications_email ?? data.emailNotifications ?? prev.emailNotifications,
         smsAlerts: data.smsAlerts ?? prev.smsAlerts,
       }));
+      
       setSecurity((prev) => ({
         ...prev,
         twoFactorAuth: data.twoFactorAuth ?? prev.twoFactorAuth,
@@ -136,16 +155,20 @@ export default function SettingsPage() {
     }
   }, []);
 
+  // Trigger loadSettings once when the page loads
   useEffect(() => {
     loadSettings();
   }, [loadSettings]);
 
-  // Load local settings from localStorage
+  // Secondary layer: Load all settings from local browser storage (localStorage).
+  // This simulates persistence for the dozens of specific frontend settings that 
+  // the backend API doesn't have database columns for yet.
   useEffect(() => {
     const stored = localStorage.getItem('adminSettings');
     if (stored) {
       try {
         const parsed = JSON.parse(stored);
+        // Only override if the parsed key exists to prevent null errors
         if (parsed.profile) setProfile((p) => ({ ...p, ...parsed.profile }));
         if (parsed.company) setCompany((c) => ({ ...c, ...parsed.company }));
         if (parsed.userMgmt) setUserMgmt((u) => ({ ...u, ...parsed.userMgmt }));
@@ -154,31 +177,33 @@ export default function SettingsPage() {
         if (parsed.reports) setReports((r) => ({ ...r, ...parsed.reports }));
         if (parsed.security) setSecurity((s) => ({ ...s, ...parsed.security }));
       } catch {
-        // ignore parse errors
+        // Silently ignore corrupted local storage
       }
     }
   }, []);
 
+  // Action: User clicked the main "Save Settings" button
   const handleSave = async () => {
     try {
-      setIsSaving(true);
+      setIsSaving(true); // Changes button text to "Saving..." and disables it
 
-      // Save to API (the fields the API supports)
+      // 1. Save critical core fields to the MongoDB backend API
       await updateSettings({
         notifications_email: notifications.emailNotifications,
         notifications_alerts: notifications.smsAlerts,
         sessionTimeout: security.sessionTimeout,
         twoFactorAuth: security.twoFactorAuth,
-        emailNotifications: notifications.emailNotifications,
+        emailNotifications: notifications.emailNotifications, // Provide both casing formats for API safety
         smsAlerts: notifications.smsAlerts,
       });
 
-      // Save everything locally
+      // 2. Save EVERYTHING to browser localStorage as a fallback UI cache
       localStorage.setItem(
         'adminSettings',
         JSON.stringify({ profile, company, userMgmt, notifications, display, reports, security })
       );
 
+      // Trigger the 3-second success checkmark animation
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
     } catch (err) {
@@ -188,8 +213,12 @@ export default function SettingsPage() {
     }
   };
 
-  // ── Reusable components ──
+  // ═══════════════════════════════════════════════════════
+  // REUSABLE UI COMPONENTS (Declared inside to access state/theme easily)
+  // Keeps the code extremely clean instead of repeating Tailwind classes everywhere
+  // ═══════════════════════════════════════════════════════
 
+  // SectionCard: The white box wrapper for a group of inputs
   const SectionCard = ({
     title,
     description,
@@ -208,6 +237,7 @@ export default function SettingsPage() {
     </div>
   );
 
+  // InputField: Standard text/email/phone input with an optional Lucide icon prefix
   const InputField = ({
     label,
     name,
@@ -234,6 +264,7 @@ export default function SettingsPage() {
         {label}
       </label>
       <div className="relative">
+        {/* Render absolute positioned icon if provided */}
         {Icon && (
           <Icon size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
         )}
@@ -245,13 +276,16 @@ export default function SettingsPage() {
           onChange={onChange}
           placeholder={placeholder}
           disabled={disabled}
+          // Pad left extra if an icon is present to prevent text overlap
           className={`w-full ${Icon ? 'pl-10' : 'pl-4'} pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent focus:bg-white transition outline-none disabled:opacity-50 disabled:cursor-not-allowed`}
         />
       </div>
+      {/* Help text below the input */}
       {hint && <p className="text-xs text-slate-400 mt-1">{hint}</p>}
     </div>
   );
 
+  // SelectField: Custom styled HTML select dropdown
   const SelectField = ({
     label,
     name,
@@ -288,6 +322,7 @@ export default function SettingsPage() {
     </div>
   );
 
+  // ToggleField: iOS style toggle switch for true/false boolean settings
   const ToggleField = ({
     label,
     description,
@@ -304,6 +339,10 @@ export default function SettingsPage() {
         <p className="text-sm font-medium text-slate-800">{label}</p>
         {description && <p className="text-xs text-slate-400 mt-0.5">{description}</p>}
       </div>
+      {/* 
+        The actual interactive switch: 
+        Uses position translation (translate-x-5) and color swaps (bg-blue-600) based on `checked`
+      */}
       <button
         onClick={onChange}
         className={`relative w-11 h-6 rounded-full transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
@@ -319,7 +358,10 @@ export default function SettingsPage() {
     </div>
   );
 
-  // ── Tab content renderers ──
+  // ═══════════════════════════════════════════════════════
+  // TAB CONTENT RENDERERS
+  // Each function returns a block of JSX specific to that tab's settings
+  // ═══════════════════════════════════════════════════════
 
   const renderProfile = () => (
     <>
@@ -354,7 +396,7 @@ export default function SettingsPage() {
             label="Role"
             name="role"
             value={profile.role}
-            onChange={() => {}}
+            onChange={() => {}} // Disabled inputs shouldn't do anything on change
             icon={Shield}
             disabled
             hint="Role is assigned by the system"
@@ -795,6 +837,11 @@ export default function SettingsPage() {
     </>
   );
 
+  // ═══════════════════════════════════════════════════════
+  // MAIN RENDER: Assembles everything together
+  // ═══════════════════════════════════════════════════════
+
+  // Map the currently active TabKey (string) to the actual component function
   const renderTabContent = () => {
     switch (activeTab) {
       case 'profile': return renderProfile();
@@ -807,17 +854,23 @@ export default function SettingsPage() {
     }
   };
 
+  // Extract the tab object so we can use its specific Icon and Label in the top header
   const activeTabData = tabs.find((t) => t.key === activeTab)!;
 
   return (
+    // Outer Flex Container handling Sidebar vs Main content
     <div className="flex">
       <Sidebar />
       <div className="flex-1 ml-64">
         <Header />
+        
+        {/* Main interactive area */}
         <main className="p-8 bg-slate-50 min-h-screen">
-          {/* Page Header */}
+
+          {/* PAGE HEADER */}
           <div className="mb-8">
             <div className="flex items-center gap-3">
+              {/* Gradient dark box around the cog icon */}
               <div className="w-10 h-10 bg-gradient-to-br from-slate-700 to-slate-900 rounded-xl flex items-center justify-center shadow-lg shadow-slate-700/20">
                 <Settings size={20} className="text-white" />
               </div>
@@ -830,10 +883,12 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Layout: Sidebar Tabs + Content */}
+          {/* TWO-COLUMN LAYOUT: Vertical Tabs on left, Content on right */}
           <div className="flex gap-6">
-            {/* Tab Navigation */}
+            
+            {/* 1. Vertial Navigation Tabs Menu */}
             <div className="w-64 flex-shrink-0">
+              {/* Fixed to top of screen when scrolling (sticky top-8) */}
               <div className="bg-white rounded-xl border border-slate-200 overflow-hidden sticky top-8">
                 <nav className="p-2">
                   {tabs.map((tab) => {
@@ -842,23 +897,23 @@ export default function SettingsPage() {
                     return (
                       <button
                         key={tab.key}
-                        onClick={() => setActiveTab(tab.key)}
+                        onClick={() => setActiveTab(tab.key)} // Swaps current tab
                         className={`w-full flex items-center gap-3 px-3.5 py-3 rounded-lg text-left transition-all duration-150 mb-0.5 ${
                           isActive
-                            ? 'bg-blue-50 text-blue-700'
-                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                            ? 'bg-blue-50 text-blue-700'  // Active styling
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900' // Inactive styling
                         }`}
                       >
-                        <Icon
-                          size={18}
-                          className={isActive ? 'text-blue-600' : 'text-slate-400'}
-                        />
+                        <Icon size={18} className={isActive ? 'text-blue-600' : 'text-slate-400'} />
+                        
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm font-medium truncate ${isActive ? 'text-blue-700' : ''}`}>
                             {tab.label}
                           </p>
                           <p className="text-[11px] text-slate-400 truncate">{tab.description}</p>
                         </div>
+                        
+                        {/* Only show the ">" arrow suffix on the actively selected tab */}
                         {isActive && <ChevronRight size={14} className="text-blue-400 flex-shrink-0" />}
                       </button>
                     );
@@ -867,9 +922,10 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            {/* Content Area */}
+            {/* 2. Main Tab Content Area */}
             <div className="flex-1 min-w-0">
-              {/* Tab Header */}
+              
+              {/* Header inside the tab (e.g. "Security" or "Company Info") */}
               <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-2.5">
                   <activeTabData.icon size={20} className="text-blue-600" />
@@ -877,25 +933,33 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              {/* Tab Content */}
+              {/* Injects the specific JSX form block based on state */}
               {renderTabContent()}
 
-              {/* Save Bar */}
+              {/* STICKY SAVE BAR: Hovers at bottom of screen ensuring "Save" is always accessible */}
               <div className="bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-between sticky bottom-4 shadow-lg shadow-slate-200/50">
+                
+                {/* Left side message: success or default */}
                 <div className="flex items-center gap-2 text-sm text-slate-500">
                   {saveSuccess ? (
                     <>
+                      {/* Green success banner */}
                       <CheckCircle2 size={16} className="text-green-500" />
                       <span className="text-green-600 font-medium">Settings saved successfully!</span>
                     </>
                   ) : (
                     <>
+                      {/* Standard message */}
                       <Clock size={14} />
                       <span>Changes are saved when you click Save.</span>
                     </>
                   )}
                 </div>
+                
+                {/* Right side buttons */}
                 <div className="flex items-center gap-3">
+                  
+                  {/* Pulls fresh data from API/local storage, effectively discarding unsaved changes */}
                   <button
                     onClick={() => loadSettings()}
                     className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-lg transition"
@@ -903,6 +967,8 @@ export default function SettingsPage() {
                     <RotateCcw size={14} />
                     Reset
                   </button>
+                  
+                  {/* Main Save action, visually disables and says "Saving..." when clicked */}
                   <button
                     onClick={handleSave}
                     disabled={isSaving}
@@ -913,6 +979,7 @@ export default function SettingsPage() {
                   </button>
                 </div>
               </div>
+
             </div>
           </div>
         </main>
