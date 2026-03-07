@@ -136,7 +136,7 @@ export default function AddManagerForm() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black placeholder:text-black"
-              placeholder="John Smith"
+              placeholder="Kamal Perera"
             />
           </div>
           <div>
@@ -154,7 +154,7 @@ export default function AddManagerForm() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black placeholder:text-black"
-              placeholder="john@example.com"
+              placeholder="kamal@example.com"
             />
           </div>
           <div>
@@ -172,7 +172,7 @@ export default function AddManagerForm() {
               onChange={handleChange}
               required
               className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-black placeholder:text-black"
-              placeholder="+1-555-0000"
+              placeholder="+94 77 123 4567"
             />
           </div>
           <div>
