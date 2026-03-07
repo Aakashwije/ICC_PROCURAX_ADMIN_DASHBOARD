@@ -95,6 +95,18 @@ export default function ProjectManagersTable() {
       isActive: status !== 'inactive',
     });
 
+    const statusLabels: Record<string, string> = {
+      active: 'Manager Approved',
+      pending: 'Manager Set to Pending',
+      inactive: 'Manager Deactivated',
+    };
+    const statusTypes: Record<string, string> = {
+      active: 'access_granted',
+      pending: 'manager_edited',
+      inactive: 'access_revoked',
+    };
+    addActivity(statusLabels[status], manager.name, statusTypes[status]);
+
     fetchManagers();
   };
 

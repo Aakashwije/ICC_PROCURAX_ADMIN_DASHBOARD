@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { getMobileUsers, approveMobileUser, rejectMobileUser, assignSheetUrl } from '../services/api';
 import { getToken } from '@/utils/auth';
+import { addActivity } from '@/utils/activityLogger';
 import { CheckCircle, XCircle, Loader2, Link as LinkIcon, Save, X } from 'lucide-react';
 import { saveUserToFirestore, updateUserSheetUrl } from '../utils/firebaseUserSync';
 
@@ -94,6 +95,8 @@ export default function MobileUsersTable() {
         isActive: true,
       });
 
+      addActivity(`Mobile User Approved: ${user.name}`, user.email, 'access_granted');
+
     } catch (err) {
       console.error('Failed to approve user', err);
     } finally {
@@ -115,6 +118,8 @@ export default function MobileUsersTable() {
         isActive: false,
       });
 
+      addActivity(`Mobile User Rejected: ${user.name}`, user.email, 'access_revoked');
+
     } catch (err) {
       console.error('Failed to reject user', err);
     } finally {
@@ -133,6 +138,8 @@ export default function MobileUsersTable() {
       // Sync to Firestore
       await updateUserSheetUrl(user.id, sheetUrlInput.trim());
       
+      addActivity(`Sheet URL Assigned to ${user.name}`, user.email, 'project_assigned');
+
       setAssigningUrlFor(null);
       setSheetUrlInput('');
     } catch (err) {
