@@ -1,5 +1,6 @@
 'use client';
 
+import Link from "next/link";
 import { Bell, Settings, User, LogOut } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -84,12 +85,13 @@ export default function Header() {
             <span className={`h-2 w-2 rounded-full ${getHealthBadgeClass()}`} />
             <span>{getHealthLabel()}</span>
           </div>
-          <button
+          <Link
+            href="/dashboard/notifications"
             aria-label="Notifications"
             className="p-2 hover:bg-slate-100 rounded-lg transition"
           >
             <Bell size={18} className="text-slate-700" />
-          </button>
+          </Link>
 
           <button
             aria-label="Settings"

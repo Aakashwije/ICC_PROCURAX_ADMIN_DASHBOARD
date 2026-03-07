@@ -7,6 +7,7 @@ import {
   LayoutDashboard,
   Users,
   FolderKanban,
+  Bell,
   Settings,
   ChevronLeft,
   ChevronRight,
@@ -21,6 +22,7 @@ export default function Sidebar() {
     { name: "Project Managers", icon: Users, href: "/dashboard/managers" },
     { name: "App Users", icon: Users, href: "/dashboard/mobile-users" },
     { name: "Projects", icon: FolderKanban, href: "/dashboard/projects" },
+    { name: "Notifications", icon: Bell, href: "/dashboard/notifications" },
     { name: "Settings", icon: Settings, href: "/dashboard/settings" },
   ];
 
