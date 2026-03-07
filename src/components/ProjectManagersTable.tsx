@@ -15,7 +15,7 @@ interface ProjectManager {
   createdAt: string;
 }
 
-import { getManagers, updateManager, deleteManager, toggleManagerAccess } from '@/services/api';
+import { getManagers, getProjects, updateManager, deleteManager, toggleManagerAccess } from '@/services/api';
 
 export default function ProjectManagersTable() {
   const [managers, setManagers] = useState<ProjectManager[]>([]);
@@ -40,13 +40,25 @@ export default function ProjectManagersTable() {
     if (!token) return;
     try {
       setLoading(true);
-      const data = await getManagers(token);
-      const normalized: ProjectManager[] = data.map((manager) => ({
+      const [managersData, projectsData] = await Promise.all([
+        getManagers(token),
+        getProjects(token),
+      ]);
+
+      // Count projects per manager
+      const projectCountMap: Record<string, number> = {};
+      projectsData.forEach((project) => {
+        if (project.managerId) {
+          projectCountMap[project.managerId] = (projectCountMap[project.managerId] || 0) + 1;
+        }
+      });
+
+      const normalized: ProjectManager[] = managersData.map((manager) => ({
         _id: manager._id,
         name: manager.name,
         email: manager.email,
         phone: manager.phone,
-        projects: 0,
+        projects: projectCountMap[manager._id] || 0,
         isApproved: manager.isApproved ?? false,
         isActive: manager.isActive ?? false,
         createdAt: manager.createdAt ?? new Date().toISOString(),
