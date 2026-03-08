@@ -54,13 +54,36 @@ export default function NotificationsPage() {
   }, []);
 
   useEffect(() => {
-    loadNotifications();
+    // Initial load
+    const stored = localStorage.getItem('recentActivities');
+    if (stored) {
+      const activities: ActivityItem[] = JSON.parse(stored);
+      const readStatus = JSON.parse(localStorage.getItem('notificationReadStatus') || '{}');
+      const enriched = activities.map((a) => ({
+        ...a,
+        read: readStatus[a.timestamp] === true,
+      }));
+      setNotifications(enriched);
+    } else {
+      setNotifications([]);
+    }
+
     const interval = setInterval(() => {
       setNow(Date.now());
-      loadNotifications();
+      // Reload within interval callback
+      const storedInner = localStorage.getItem('recentActivities');
+      if (storedInner) {
+        const activities: ActivityItem[] = JSON.parse(storedInner);
+        const readStatus = JSON.parse(localStorage.getItem('notificationReadStatus') || '{}');
+        const enriched = activities.map((a) => ({
+          ...a,
+          read: readStatus[a.timestamp] === true,
+        }));
+        setNotifications(enriched);
+      }
     }, 2000);
     return () => clearInterval(interval);
-  }, [loadNotifications]);
+  }, []);
 
   // Time ago helper
   const getTimeAgo = (timestamp: number) => {

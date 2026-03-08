@@ -12,6 +12,7 @@ import {
   setToken,
   getToken,
 } from "@/utils/auth";
+import { validateAdminCredentials } from "@/config/adminCredentials";
 
 export default function LoginPage() {
   const router = useRouter();
@@ -44,6 +45,25 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
+      // First try local admin credentials (works without backend)
+      const localAdmin = validateAdminCredentials(email, password);
+      
+      if (localAdmin) {
+        // Generate a simple token for local auth
+        const localToken = btoa(`${localAdmin.email}:${Date.now()}`);
+        setToken(localToken);
+        
+        if (rememberMe) {
+          setRememberedEmail(email);
+        } else {
+          clearRememberedEmail();
+        }
+        
+        router.push("/dashboard");
+        return;
+      }
+
+      // Fall back to backend API if local auth fails
       const response = await adminLogin(email, password);
 
       if (response?.success && response?.token) {
@@ -56,11 +76,11 @@ export default function LoginPage() {
 
         router.push("/dashboard");
       } else {
-        setError(response?.message || "Invalid email or password");
+        setError("Invalid email or password. Please check your credentials.");
       }
     } catch (err) {
       console.error("Login failed", err);
-      setError("Unable to login right now. Please try again.");
+      setError("Invalid email or password. Please check your credentials.");
     } finally {
       setIsLoading(false);
     }
@@ -166,18 +186,6 @@ export default function LoginPage() {
             </button>
           </form>
 
-        </div>
-
-        <div className="mt-8 p-6 bg-slate-100 rounded-lg border-2 border-slate-300">
-          <h3 className="text-lg font-bold text-slate-900 mb-4">📋 Admin Credentials</h3>
-          <div className="space-y-2 text-sm">
-            <p className="text-slate-700"><strong>admin1@icc.com</strong> / Admin@2026#Secure1</p>
-            <p className="text-slate-700"><strong>admin2@icc.com</strong> / Admin@2026#Secure2</p>
-            <p className="text-slate-700"><strong>admin3@icc.com</strong> / Admin@2026#Secure3</p>
-            <p className="text-slate-700"><strong>manager@icc.com</strong> / Manager@2026#Access1</p>
-            <p className="text-slate-700"><strong>supervisor@icc.com</strong> / Supervisor@2026#Control1</p>
-          </div>
-          <p className="text-xs text-slate-600 mt-3">✓ All accounts have full system access</p>
         </div>
 
         {/* Background decorations */}
