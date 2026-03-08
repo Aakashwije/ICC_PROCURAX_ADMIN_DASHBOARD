@@ -322,7 +322,7 @@ export default function MobileUsersTable() {
                               <input 
                                 type="url" 
                                 placeholder="Paste Sheet URL" 
-                                className="border border-slate-300 rounded px-2 py-1 text-xs"
+                                className="border border-slate-300 rounded px-2 py-1 text-xs text-black"
                                 value={sheetUrlInput}
                                 onChange={(e) => setSheetUrlInput(e.target.value)}
                               />
