@@ -438,7 +438,7 @@ export default function ProjectManagersTable() {
                     // Update only the name field in the form data object
                     setEditFormData({ ...editFormData, name: e.target.value })
                   }
-                  className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"
+                  className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-black"
                 />
               </div>
 
@@ -457,7 +457,7 @@ export default function ProjectManagersTable() {
                     // Update only the email field in the form data object
                     setEditFormData({ ...editFormData, email: e.target.value })
                   }
-                  className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"
+                  className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-black"
                 />
               </div>
 
@@ -476,7 +476,7 @@ export default function ProjectManagersTable() {
                     // Update only the phone field in the form data object
                     setEditFormData({ ...editFormData, phone: e.target.value })
                   }
-                  className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2"
+                  className="mt-1 w-full border border-slate-300 rounded-lg px-3 py-2 text-black"
                 />
               </div>
             </div>
