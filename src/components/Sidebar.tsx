@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -14,8 +14,15 @@ import {
 } from "lucide-react";
 
 export default function Sidebar() {
-  const [isOpen, setIsOpen] = useState(true);
-  const pathname = usePathname(); 
+  const [isOpen, setIsOpen] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+  const pathname = usePathname();
+
+  // Set initial state after hydration to prevent mismatch
+  useEffect(() => {
+    setIsMounted(true);
+    setIsOpen(true);
+  }, []);
 
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -29,11 +36,11 @@ export default function Sidebar() {
   return (
     <div
       className={`${
-        isOpen ? "w-64" : "w-20"
+        isMounted && isOpen ? "w-64" : "w-20"
       } bg-slate-900 text-white transition-all duration-300 h-screen fixed left-0 top-0 shadow-lg`}
     >
       <div className="flex items-center justify-between p-6 border-b border-slate-700">
-        {isOpen && <h1 className="text-2xl font-bold">ICC Admin</h1>}
+        {isMounted && isOpen && <h1 className="text-2xl font-bold">ICC Admin</h1>}
 
         <button
           onClick={() => setIsOpen(!isOpen)}
