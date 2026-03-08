@@ -166,9 +166,18 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <p className="text-center text-slate-600 text-sm mt-6">
-            Test credentials: admin@example.com / password
-          </p>
+        </div>
+
+        <div className="mt-8 p-6 bg-slate-100 rounded-lg border-2 border-slate-300">
+          <h3 className="text-lg font-bold text-slate-900 mb-4">📋 Admin Credentials</h3>
+          <div className="space-y-2 text-sm">
+            <p className="text-slate-700"><strong>admin1@icc.com</strong> / Admin@2026#Secure1</p>
+            <p className="text-slate-700"><strong>admin2@icc.com</strong> / Admin@2026#Secure2</p>
+            <p className="text-slate-700"><strong>admin3@icc.com</strong> / Admin@2026#Secure3</p>
+            <p className="text-slate-700"><strong>manager@icc.com</strong> / Manager@2026#Access1</p>
+            <p className="text-slate-700"><strong>supervisor@icc.com</strong> / Supervisor@2026#Control1</p>
+          </div>
+          <p className="text-xs text-slate-600 mt-3">✓ All accounts have full system access</p>
         </div>
 
         {/* Background decorations */}
