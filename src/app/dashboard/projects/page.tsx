@@ -293,7 +293,7 @@ export default function ProjectsPage() {
   // ═══════════════════════════════════════════════════════
   return (
     // Screen container with Sidebar on Left
-    <div className="flex">
+    <div suppressHydrationWarning className="flex">
       <Sidebar />
       
       {/* Main Content Pane pushed right by Sidebar width (ml-64) */}

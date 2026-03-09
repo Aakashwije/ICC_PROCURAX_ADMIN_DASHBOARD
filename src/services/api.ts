@@ -247,8 +247,10 @@ export async function assignSheetUrl(token: string, userId: string, googleSheetU
   return res.json();
 }
 
-export async function getSettings(): Promise<SettingsData> {
-  const res = await fetch(`${API_URL}/api/settings`);
+export async function getSettings(token: string): Promise<SettingsData> {
+  const res = await fetch(`${API_URL}/admin-settings`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
   const parsed = await parseJson(res, (value): value is SettingsResponse => {
     if (!isObject(value)) return false;
     return isBoolean(value.success) && isObject(value.data);
@@ -257,10 +259,10 @@ export async function getSettings(): Promise<SettingsData> {
   return parsed.data;
 }
 
-export async function updateSettings(settings: SettingsData): Promise<SettingsData> {
-  const res = await fetch(`${API_URL}/api/settings/bulk`, {
+export async function updateSettings(token: string, settings: SettingsData): Promise<SettingsData> {
+  const res = await fetch(`${API_URL}/admin-settings`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: getHeaders(token),
     body: JSON.stringify(settings),
   });
 

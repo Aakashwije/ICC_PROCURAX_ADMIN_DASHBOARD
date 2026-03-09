@@ -20,7 +20,7 @@ import { Plus, Users } from 'lucide-react';
 export default function ManagersPage() {
   return (
     // Outer flex container — sidebar on the left, main content on the right
-    <div className="flex">
+    <div suppressHydrationWarning className="flex">
 
       {/* Left sidebar navigation panel */}
       <Sidebar />

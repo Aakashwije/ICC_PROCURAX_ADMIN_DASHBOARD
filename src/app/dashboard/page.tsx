@@ -261,7 +261,7 @@ export default function DashboardPage() {
   // ─────────────────────────────────────────────
   return (
     // Outer flex container — sidebar sits on the left, content on the right
-    <div className="flex">
+    <div suppressHydrationWarning className="flex">
 
       {/* Left sidebar navigation panel */}
       <Sidebar />

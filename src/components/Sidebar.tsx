@@ -35,6 +35,7 @@ export default function Sidebar() {
 
   return (
     <div
+      suppressHydrationWarning
       className={`${
         isMounted && isOpen ? "w-64" : "w-20"
       } bg-slate-900 text-white transition-all duration-300 h-screen fixed left-0 top-0 shadow-lg`}

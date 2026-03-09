@@ -15,7 +15,7 @@ import { Users } from 'lucide-react';
 export default function MobileUsersPage() {
   return (
     // Outer flex container — sidebar on the left, main content taking remaining space
-    <div className="flex">
+    <div suppressHydrationWarning className="flex">
 
       {/* Left sidebar navigation panel */}
       <Sidebar />

@@ -7,7 +7,7 @@ import { UserPlus } from 'lucide-react';
 
 export default function AddManagerPage() {
   return (
-    <div className="flex">
+    <div suppressHydrationWarning className="flex">
       <Sidebar />
       <div className="flex-1 ml-64">
         <Header />

@@ -49,7 +49,7 @@ export default function ReportsPage() {
   ];
 
   return (
-    <div className="flex">
+    <div suppressHydrationWarning className="flex">
       <Sidebar />
       <div className="flex-1 ml-64">
         <Header />

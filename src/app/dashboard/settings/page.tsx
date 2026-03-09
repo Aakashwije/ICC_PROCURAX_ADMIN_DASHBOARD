@@ -16,6 +16,7 @@ import {
 
 // Import API services specifically built to pull and push admin settings
 import { getSettings, updateSettings } from '@/services/api';
+import { getToken } from '@/utils/auth';
 
 // ═══════════════════════════════════════════════════════
 // TYPES & CONSTANTS
@@ -50,6 +51,9 @@ export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<TabKey>('profile'); // Tracks which tab is currently viewed
   const [isSaving, setIsSaving] = useState(false);               // Tracks if the Save API request is pending
   const [saveSuccess, setSaveSuccess] = useState(false);         // Triggers the green "Saved successfully!" checkmark
+
+  // Get auth token
+  const token = getToken();
 
   // ═══════════════════════════════════════════════════════
   // SECTION STATES: Each tab gets its own state object.
@@ -134,8 +138,10 @@ export default function SettingsPage() {
   // Fetch settings actually supported by the backend MongoDB setup
   // Wrapped in useCallback so it can be safely used inside useEffect
   const loadSettings = useCallback(async () => {
+    if (!token) return; // Guard: don't fetch if no token
+    
     try {
-      const data = await getSettings(); // GET /api/admin-settings
+      const data = await getSettings(token); // GET /api/admin-settings
       
       // Update specific local states based on the API response, falling back to previous state if missing
       setNotifications((prev) => ({
@@ -153,7 +159,7 @@ export default function SettingsPage() {
     } catch (err) {
       console.error('Failed to load settings', err);
     }
-  }, []);
+  }, [token]);
 
   // Trigger loadSettings once when the page loads
   useEffect(() => {
@@ -184,11 +190,13 @@ export default function SettingsPage() {
 
   // Action: User clicked the main "Save Settings" button
   const handleSave = async () => {
+    if (!token) return; // Guard: don't save if no token
+    
     try {
       setIsSaving(true); // Changes button text to "Saving..." and disables it
 
       // 1. Save critical core fields to the MongoDB backend API
-      await updateSettings({
+      await updateSettings(token, {
         notifications_email: notifications.emailNotifications,
         notifications_alerts: notifications.smsAlerts,
         sessionTimeout: security.sessionTimeout,
@@ -859,7 +867,7 @@ export default function SettingsPage() {
 
   return (
     // Outer Flex Container handling Sidebar vs Main content
-    <div className="flex">
+    <div suppressHydrationWarning className="flex">
       <Sidebar />
       <div className="flex-1 ml-64">
         <Header />
