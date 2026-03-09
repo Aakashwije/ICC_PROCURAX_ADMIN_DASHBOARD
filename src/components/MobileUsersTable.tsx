@@ -321,7 +321,7 @@ export default function MobileUsersTable() {
                               {/* The input binds to the sheetUrlInput state */}
                               <input 
                                 type="url" 
-                                placeholder="📋 Paste Sheet URL Here" 
+                                placeholder="Paste Sheet URL Here" 
                                 className="border-2 border-blue-500 rounded-lg px-4 py-2 text-sm text-black placeholder-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent shadow-sm min-w-[300px]"
                                 value={sheetUrlInput}
                                 onChange={(e) => setSheetUrlInput(e.target.value)}
