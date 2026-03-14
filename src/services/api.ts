@@ -63,6 +63,7 @@ export type ProjectResponse = {
 export type ProjectPayload = {
   name: string;
   sheetUrl: string;
+  status?: string;
 };
 
 export type AssignManagerPayload = {
@@ -251,12 +252,25 @@ export async function getSettings(token: string): Promise<SettingsData> {
   const res = await fetch(`${API_URL}/admin-settings`, {
     headers: { Authorization: `Bearer ${token}` }
   });
-  const parsed = await parseJson(res, (value): value is SettingsResponse => {
-    if (!isObject(value)) return false;
-    return isBoolean(value.success) && isObject(value.data);
-  });
 
-  return parsed.data;
+  if (!res.ok) {
+    const error = await res.json().catch(() => ({}));
+    throw new Error((error as { message?: string })?.message || 'Failed to fetch settings');
+  }
+
+  const data: unknown = await res.json();
+
+  // Handle both direct SettingsData and wrapped SettingsResponse formats
+  if (isObject(data)) {
+    // If response has a 'data' field, it's wrapped in SettingsResponse format
+    if ('data' in data && isObject(data.data)) {
+      return data.data as SettingsData;
+    }
+    // Otherwise, assume it's direct SettingsData
+    return data as SettingsData;
+  }
+
+  throw new Error('Unexpected API response format');
 }
 
 export async function updateSettings(token: string, settings: SettingsData): Promise<SettingsData> {

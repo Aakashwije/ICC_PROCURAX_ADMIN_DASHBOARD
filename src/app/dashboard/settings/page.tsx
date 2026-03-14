@@ -157,7 +157,8 @@ export default function SettingsPage() {
         sessionTimeout: data.sessionTimeout ?? prev.sessionTimeout,
       }));
     } catch (err) {
-      console.error('Failed to load settings', err);
+      // Silently fail and use defaults - settings are optional
+      console.warn('Settings not available from API, using defaults:', err instanceof Error ? err.message : 'Unknown error');
     }
   }, [token]);
 

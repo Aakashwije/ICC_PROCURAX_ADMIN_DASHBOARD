@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
@@ -16,7 +16,13 @@ import {
 export default function Sidebar() {
   // Start with consistent initial state for both server and client
   const [isOpen, setIsOpen] = useState(true);
+  const [isMounted, setIsMounted] = useState(false);
   const pathname = usePathname();
+
+  // Only use pathname after hydration to prevent server/client mismatch
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const menuItems = [
     { name: "Dashboard", icon: LayoutDashboard, href: "/dashboard" },
@@ -26,6 +32,16 @@ export default function Sidebar() {
     { name: "Notifications", icon: Bell, href: "/dashboard/notifications" },
     { name: "Settings", icon: Settings, href: "/dashboard/settings" },
   ];
+
+  // Calculate isActive only after hydration to ensure server/client match
+  const getIsActive = (href: string) => {
+    if (!isMounted) return false; // Default to false on server
+    
+    return (
+      pathname === href ||
+      (href !== "/dashboard" && pathname.startsWith(href + "/"))
+    );
+  };
 
   return (
     <div
@@ -47,13 +63,7 @@ export default function Sidebar() {
       <nav className="mt-6 space-y-2 px-4">
         {menuItems.map((item) => {
           const Icon = item.icon;
-
-        
-          // Treat the top-level dashboard route as an exact match only.
-          // For other menu items allow prefix matching so nested routes remain active.
-          const isActive =
-            pathname === item.href ||
-            (item.href !== "/dashboard" && pathname.startsWith(item.href + "/"));
+          const isActive = getIsActive(item.href);
 
           return (
             <Link

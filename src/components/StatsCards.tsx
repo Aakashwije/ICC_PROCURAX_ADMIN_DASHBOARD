@@ -12,7 +12,7 @@ interface StatCard {
   color: string;
 }
 
-import { getStats } from '@/services/api';
+import { getStats, getProjects } from '@/services/api';
 import { getToken } from '@/utils/auth';
 
 export default function StatsCards() {
@@ -26,27 +26,49 @@ export default function StatsCards() {
   // ------------------------------------
   // Fetch dashboard stats from backend
   // ------------------------------------
-  // ------------------------------------
-  // Fetch dashboard stats from backend
-  // ------------------------------------
   const fetchStats = async () => {
     const token = getToken();
     if (!token) return;
     try {
       const data = await getStats(token);
-      const accessGrantedPercent = data.totalManagers
-        ? Math.round(
-            ((data.totalManagers - data.pendingApprovals) /
-              data.totalManagers) *
-              100
-          )
-        : 0;
-      setStats({
-        totalManagers: data.totalManagers,
-        activeProjects: data.activeProjects,
-        pendingApprovals: data.pendingApprovals,
-        accessGrantedPercent,
-      });
+      
+      // Try to get actual active projects count from projects endpoint
+      try {
+        const projects = await getProjects(token);
+        const activeProjectsCount = projects.filter(
+          (p) => p.status === 'Active' || !p.status
+        ).length;
+        
+        const accessGrantedPercent = data.totalManagers
+          ? Math.round(
+              ((data.totalManagers - data.pendingApprovals) /
+                data.totalManagers) *
+                100
+            )
+          : 0;
+          
+        setStats({
+          totalManagers: data.totalManagers,
+          activeProjects: activeProjectsCount || data.activeProjects,
+          pendingApprovals: data.pendingApprovals,
+          accessGrantedPercent,
+        });
+      } catch {
+        // Fallback to API stats if projects endpoint fails
+        const accessGrantedPercent = data.totalManagers
+          ? Math.round(
+              ((data.totalManagers - data.pendingApprovals) /
+                data.totalManagers) *
+                100
+            )
+          : 0;
+        setStats({
+          totalManagers: data.totalManagers,
+          activeProjects: data.activeProjects,
+          pendingApprovals: data.pendingApprovals,
+          accessGrantedPercent,
+        });
+      }
     } catch (err) {
       console.error('Failed to load dashboard stats', err);
     }

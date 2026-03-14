@@ -141,8 +141,12 @@ export default function ProjectsPage() {
     // Define async helper inside the handler
     const submit = async () => {
       try {
-        // Send create request to API
-        await addProject(token, { name: projectTitle, sheetUrl: googleSheetUrl });
+        // Send create request to API with default "Active" status
+        await addProject(token, { 
+          name: projectTitle, 
+          sheetUrl: googleSheetUrl,
+          status: 'Active' // Set default status to Active so it counts in dashboard stats
+        });
         
         // Log the activity to Dashboard
         addActivity('New Project Added', projectTitle, 'project_added');
